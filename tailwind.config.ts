@@ -9,6 +9,26 @@ export default {
   ],
   theme: {
   	extend: {
+		fontFamily: {
+			poorStory: ['"Poor Story"', "sans-serif"],
+			poppins: ['"Poppins"', "sans-serif"],
+		  },
+		  fontSize: {
+			'xs': '0.75rem', // Extra Small
+			'sm': '0.875rem', // Small
+			'base': '1rem', // Base (Default)
+			'lg': '1.125rem', // Large
+			'xl': '1.25rem', // Extra Large
+			'2xl': '1.5rem', // 2x Large
+			'3xl': '1.875rem', // 3x Large
+			'4xl': '2.25rem', // 4x Large
+			'5xl': '3rem', // 5x Large
+			'6xl': '3.75rem', // 6x Large
+			'7xl': '4.5rem', // 7x Large
+			'8xl': '6rem', // 8x Large
+			'9xl': '8rem', // 9x Large
+			'custom': '2.75rem', // Example Custom Font Size
+		  },
   		colors: {
   			background: '#D74E26',
   			foreground: '',
@@ -21,7 +41,7 @@ export default {
   				foreground: 'hsl(var(--popover-foreground))'
   			},
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
+  				DEFAULT: '#ffffff',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {
