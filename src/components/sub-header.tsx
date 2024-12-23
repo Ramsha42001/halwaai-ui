@@ -12,7 +12,7 @@ const headerItems = [
 export default function SubHeader() {
   const [activeCategory, setActiveCategory] = useState("Update Menu Items");
   return (
-    <div className="bg-[#1a1a1a] flex flex-wrap justify-center items-center gap-2 md:gap-4 p-4">
+    <div className="bg-[#000000] flex flex-wrap justify-center items-center gap-2 md:gap-4 p-4">
       {headerItems.map((category) => (
         <Button
           key={category}
