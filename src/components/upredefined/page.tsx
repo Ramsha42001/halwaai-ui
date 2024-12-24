@@ -43,7 +43,7 @@ export default function PredefinedThali() {
   return (
     <div className="min-h-screen bg-[#FFF5F5] py-16 px-4">
       <div className="container mx-auto">
-        <h1 className="text-4xl md:text-5xl text-center font-poorStory mb-12">
+        <h1 className="text-4xl md:text-5xl text-center font-poorStory mb-12 text-[black]">
           Check out our Pre-defined Thalis
         </h1>
         

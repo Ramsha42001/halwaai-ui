@@ -26,7 +26,7 @@ export default function MenuPage() {
   const [isMenuFormOpen, setIsMenuFormOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#fff5f5]">
+    <div className="min-h-screen bg-[#fff5f5] text-[black]">
       {/* Header */}
       <Header />
       <SubHeader />

@@ -13,7 +13,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-black text-white">
+    <header className="bg-black text-white fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto flex items-center justify-between py-4 px-6">
         {/* Logo Section */}
         <div className="text-3xl font-medium font-poorStory tracking-wide">

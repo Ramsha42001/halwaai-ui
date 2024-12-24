@@ -4,7 +4,7 @@ import { Button } from './ui/button'
 export default function Hero() {
     return (
         <>
-            <div className="w-full min-h-[80vh] h-auto flex items-center justify-center bg-background px-4 sm:px-8 md:px-20 sm:py-16 md:py-0 py-10">
+            <div className="w-full min-h-[100vh] h-auto flex items-center justify-center bg-background px-4 sm:px-8 md:px-20 sm:py-16 md:py-0 py-10">
     <div className="w-full h-[90vh] flex flex-col-reverse md:flex-row items-center justify-between">
         <div className="w-full md:w-[50%] h-[90vh] flex flex-col items-start justify-center lg:text-left text-center">
             {/* Responsive Heading */}
