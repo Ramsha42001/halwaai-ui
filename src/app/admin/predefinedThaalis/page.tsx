@@ -40,7 +40,7 @@ export default function PredefinedThaalis() {
               title={item.name}
               items={item.dishes}
               image={item.image}
-              onEdit={() => console.log(`Edit ${item.name}`)}
+              onClick={() => console.log(`Edit ${item.name}`)}
               onDelete={() => console.log(`Delete ${item.name}`)}
             />
           ))}

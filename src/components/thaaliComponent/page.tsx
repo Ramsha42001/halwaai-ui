@@ -6,11 +6,12 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import { DishItem } from "@/types/menu";
 
+
 interface ThaliCardProps {
   title: string;
   items: DishItem[];
   image: string;
-  onEdit: () => void;
+  onClick: () => void;
   onDelete: () => void;
 }
 
@@ -18,9 +19,11 @@ export function ThaliCard({
   title,
   items,
   image,
-  onEdit,
+  onClick,
   onDelete,
 }: ThaliCardProps) {
+  
+
   return (
     <Card className="overflow-hidden bg-white rounded-lg border-2 border-black w-[307px] h-[500px]">
       <div className="p-4">
@@ -29,9 +32,9 @@ export function ThaliCard({
           <h3 className="text-lg font-bold text-black">{title}</h3>
           <div className="flex gap-2">
             <Button
+              onClick={() => {}}
               variant="outline"
               size="icon"
-              onClick={onEdit}
               className="h-8 w-8 border-gray-300"
             >
               <Pencil className="h-4 w-4 text-black" />
