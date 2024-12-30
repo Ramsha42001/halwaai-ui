@@ -1,6 +1,8 @@
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { IceCreamBowlIcon as Bowl, CroissantIcon as Bread, IceCream2, UtensilsCrossed } from 'lucide-react'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
 
 const thalis = [
   {
@@ -41,40 +43,57 @@ const menuItems = [
 
 export default function PredefinedThali() {
   return (
-    <div className="min-h-screen bg-[#FFF5F5] py-16 px-4">
+    <div className="min-h-screen bg-[#FFF5F5] py-8 px-4 sm:py-16">
       <div className="container mx-auto">
-        <h1 className="text-4xl md:text-5xl text-center font-poorStory mb-12 text-[black]">
+        <h1 className="text-4xl md:text-5xl text-center font-poorStory mb-8 sm:mb-12 text-[black]">
           Check out our Pre-defined Thalis
         </h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto pt-[10%]">
-          {thalis.map((thali, index) => (
-            <div key={index} className="relative">
-              {/* Image positioned over the card */}
-              <img 
-                className="absolute top-[-150px] left-1/2 transform -translate-x-1/2 z-10 w-[320px] h-[320px] object-cover rounded-full" 
-                src={thali.image} 
-                alt={thali.title} 
-              />
-              <Card className="bg-[#997864] text-white border-none relative pt-40">
-                <CardHeader className="pb-2">
-                  <h2 className="text-2xl font-semibold">{thali.title}</h2>
-                  <p className="text-sm opacity-90">{thali.subtitle}</p>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {menuItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-3">
-                      {item.icon}
-                      <span className="text-sm">{item.text}</span>
+        <div className="mt-16 sm:mt-32 relative">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full max-w-6xl mx-auto px-[20px]"
+          >
+            <CarouselContent className="min-w-[100%] h-auto min-h-[90vh] h-auto">
+              {thalis.map((thali, index) => (
+                <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3 h-full">
+                  <div className="relative px-4 h-full flex flex-col top-[20px]">
+                    <div className="absolute top-[-30px] left-1/2 transform -translate-x-1/2 z-10 w-[220px] h-[220px] md:w-[280px] md:h-[280px] overflow-hidden rounded-full">
+                      <Image 
+                        src={thali.image}
+                        alt={thali.title}
+                        layout="fill"
+                        objectFit="cover"
+                        className="rounded-full"
+                      />
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                    <Card className="bg-[#997864] text-white border-none flex flex-col h-full mt-[80px] md:mt-[130px] pt-[80px] md:pt-[100px]">
+                      <CardHeader className="pb-2">
+                        <h2 className="text-2xl font-semibold">{thali.title}</h2>
+                        <p className="text-sm opacity-90">{thali.subtitle}</p>
+                      </CardHeader>
+                      <CardContent className="space-y-2 flex-grow">
+                        {menuItems.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-3">
+                            {item.icon}
+                            <span className="text-sm">{item.text}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
+            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+          </Carousel>
         </div>
 
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center ">
           <Button size="lg" className="bg-black text-white hover:bg-black/90">
             Order Predefined Thali
           </Button>
@@ -83,3 +102,5 @@ export default function PredefinedThali() {
     </div>
   )
 }
+
+

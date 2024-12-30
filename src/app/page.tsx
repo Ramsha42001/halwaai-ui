@@ -7,18 +7,21 @@ import Delivery from "@/components/udelivery/page";
 import NgoPage from "@/components/ngo/page";
 import Contact from "@/components/contactus/page";
 import Footer from "@/components/footer/page";
+import BottomNav from "@/components/bottomNav/page";
 
 export default function Home() {
   return (
     <>
     <Header />
+    <BottomNav />
      <Hero />
      <PredefinedThali />
-     <CustomizeThali />
+      <CustomizeThali />
      <Delivery />
-     <NgoPage />
-     <Contact />
-     <Footer />
+   <NgoPage />
+       <Contact />
+     <Footer /> 
+    
     </>
     
   );

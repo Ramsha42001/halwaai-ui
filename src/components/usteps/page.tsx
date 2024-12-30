@@ -81,24 +81,30 @@ export default function CustomizeThali() {
 
           {/* Right Section: Image and Buttons */}
           <div className="flex flex-col justify-center items-center space-y-8">
-            <Image
-              src="/images/thali1.png"
-              alt="Thali with various Indian dishes"
-              width={500}
-              height={500}
-              className="rounded-full"
-            />
-            <div className="flex gap-4">
-              <Button className="flex-1 bg-black text-white hover:bg-white/90">
-                Customize your Thali
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 bg-accent text-[black] hover:bg-white/90 border-[black]"
-              >
-                Order Predefined Thali
-              </Button>
-            </div>
+          <Image
+  src="/images/thali1.png"
+  alt="Thali with various Indian dishes"
+  width={500}
+  height={500}
+  className="rounded-full hidden md:block" // Hide on small screens, show on medium and larger
+/>
+
+   {/* Buttons */}
+   <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full">
+                            <Button 
+                                className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
+                                size="lg"
+                            >
+                                Customize your Thali
+                            </Button>
+                            <Button 
+                                className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold px-6 py-3 w-full sm:w-auto" 
+                                variant="secondary" 
+                                size="lg"
+                            >
+                                Order Predefined Thali
+                            </Button>
+                        </div>
           </div>
         </div>
       </div>
