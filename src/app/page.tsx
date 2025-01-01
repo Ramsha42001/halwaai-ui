@@ -12,7 +12,7 @@ import BottomNav from "@/components/bottomNav/page";
 export default function Home() {
   return (
     <>
-    {/* <Header /> */}
+    <Header />
     <BottomNav />
      <Hero />
      <PredefinedThali />

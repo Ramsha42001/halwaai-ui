@@ -1,88 +1,74 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Toggle } from "@/components/ui/toggle"
+import { Card, CardContent } from "@/components/ui/card"
 import { Minus, Plus } from 'lucide-react'
-
-interface MenuItemCardProps {
-  title: string
+import { useState } from "react"
+import { YesNoToggle } from "../toggle/page"
+interface MenuItemProps {
+  id: number
+  name: string
   description: string
-  imageUrl: string
+  image: string
+  quantity: number
+  hasButter: boolean
+  onQuantityChange: (id: number, increment: boolean) => void
+  onButterToggle: (id: number) => void
 }
 
-export default function MenuItemCard({ 
-  title = "Tandoori Roti",
-  description = "Soft, fluffy roti, hand-tossed and baked in a hot tandoor.",
-  imageUrl = "/placeholder.svg?height=200&width=300"
-}: MenuItemCardProps) {
-  const [quantity, setQuantity] = useState(1)
-  const [butterEnabled, setButterEnabled] = useState(false)
+export function MenuItemCard({
+  id,
+  name,
+  description,
+  image,
+  quantity,
+  hasButter,
+  onQuantityChange,
+  onButterToggle,
+}: MenuItemProps) {
 
-  const incrementQuantity = () => setQuantity(prev => prev + 1)
-  const decrementQuantity = () => setQuantity(prev => prev > 1 ? prev - 1 : 1)
-
+  const [isToggled, setIsToggled] = useState(false)
   return (
-    <Card className="w-[320px] h-[370px] overflow-hidden bg-[#8B7355] z-[0]">
-      <CardContent className="p-0">
+    <>
+    <Card className="bg-[#997864] border-[1px] border-[black] w-full md:w-[350px]">
+      <CardContent className="p-4">
         <div className="relative">
-          {/* Image Container */}
-          <div className="relative h-[230px] w-full p-2">
-            <img
-              src={imageUrl}
-              alt={title}
-              className="h-full w-full object-cover"
-            />
-            {/* Butter Toggle */}
-            <div className="absolute left-2 top-2 flex items-center gap-1 rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm">
-              <span className="text-sm font-medium">Butter</span>
-              <div className="flex gap-1">
-                <Toggle
-                  pressed={butterEnabled}
-                  onPressedChange={() => setButterEnabled(true)}
-                  className="h-6 w-8 bg-green-600 data-[state=on]:bg-green-600"
-                >
-                  Yes
-                </Toggle>
-                <Toggle
-                  pressed={!butterEnabled}
-                  onPressedChange={() => setButterEnabled(false)}
-                  className="h-6 w-8 bg-red-600 data-[state=on]:bg-red-600"
-                >
-                  No
-                </Toggle>
-              </div>
-            </div>
-            {/* Quantity Counter */}
-            <div className="absolute right-2 top-2 flex items-center gap-1 rounded-lg bg-black/50 p-2 text-white backdrop-blur-sm">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-white/20"
-                onClick={decrementQuantity}
-              >
-                <Minus className="h-4 w-4" />
-              </Button>
-              <span className="w-4 text-center">{quantity}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 hover:bg-white/20"
-                onClick={incrementQuantity}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <img
+            src={image}
+            alt={name}
+            className="w-full h-48 object-cover rounded-lg"
+          />
+           <div className="absolute top-2 left-2 bg-[white] bg-opacity-50 p-3 rounded-xl shadow-md flex items-center space-x-2">
+            <h5>Butter</h5>
+           <YesNoToggle onToggle={(pressed) => setIsToggled(pressed)} />
+    </div>
+          <div className="absolute top-2 right-2 bg-white bg-opacity-60 rounded-lg p-1 flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onQuantityChange(id, false)}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="w-4 text-center">{quantity}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={() => onQuantityChange(id, true)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
-          {/* Title and Description */}
-          <div className="p-4 text-white">
-            <h3 className="font-['Comic_Sans_MS'] text-2xl">{title}</h3>
-            <p className="mt-1 text-sm text-gray-200">{description}</p>
-          </div>
+        </div>
+        <div className="mt-4">
+          <h3 className="font-medium text-xl text-white font-poorStory">{name}</h3>
+          <p className="text-white/90 text-sm font-poppins">{description}</p>
         </div>
       </CardContent>
     </Card>
+    </>
   )
 }
 

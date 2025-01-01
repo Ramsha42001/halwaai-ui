@@ -1,107 +1,109 @@
 'use client'
 
-import React, { useMemo } from 'react'
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import SidebarB from '@/components/sidebar/page'
-import MenuBar from '@/components/MenuBar/page'
-import Header from "@/components/uheader/page"
-import { Button } from '@/components/ui/button'
-import MenuItemCard from '@/components/menuItemCard/page'
+import { useState } from 'react'
+import { Button } from "@/components/ui/button"
+import { ChevronRight } from 'lucide-react'
+import { MenuItemCard } from '@/components/menuItemCard/page'
+import { Sidebar } from '@/components/sidebar/page'
+import { MenuBar } from '@/components/MenuBar/page'
 
-export default function Dashboard() {
-   const breads = useMemo(() => [
-     {
-        id: 1,
-        title: "Naan",
-        description: "Soft, fluffy naan, hand-tossed and baked in a hot tandoor",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-     {
-        id: 2,
-        title: "Roti",
-        description: "Whole wheat flatbread, a staple in Indian cuisine",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-     {
-        id: 3,
-        title: "Paratha",
-        description: "Flaky, layered flatbread, often stuffed with various fillings",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-     {
-        id: 4,
-        title: "Kulcha",
-        description: "Leavened bread, often flavored with various spices",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-     {
-        id: 5,
-        title: "Bhatura",
-        description: "Deep-fried, fluffy bread, often served with chole",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-     {
-        id: 6,
-        title: "Puri",
-        description: "Small, deep-fried bread that puffs up when cooked",
-        imageUrl: "/placeholder.svg?height=400&width=400"
-     },
-   ], [])
 
-   return (
-      <SidebarProvider>
-        <div className="min-h-screen bg-foreground flex">
-          <SidebarB />
-          <SidebarInset className="flex-1 bg-foreground mt-[50px]">
-            <div className="min-h-screen">
-              <Header />
-              
-              {/* Fixed Top Navigation Area */}
-                  <div className="fixed top-[13%] left-[25%] z-10 flex justify-center">
-                    <MenuBar />
-                  </div>
-
-              <main className="w-full min-h-screen pb-20 mt-[80px]">
-                {/* Main Content */}
-                <div className="px-4 md:px-6 mt-6">
-                  <h1 className="text-3xl md:text-4xl font-bold font-poorStory text-black mt-6">
-                    Breads
-                  </h1>
-
-                  {/* Menu Items Grid */}
-                  <div className="flex flex-row flex-wrap gap-4 mt-6 py-[10px]">
-                    {breads.map((bread) => (
-                      <MenuItemCard
-                        key={bread.id}
-                        title={bread.title}
-                        description={bread.description}
-                        imageUrl={bread.imageUrl}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Bottom Navigation */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 border-t md:border-none bg-foreground">
-                  <div className="flex justify-between max-w-md mx-auto md:max-w-none md:justify-end md:pr-8">
-                    <Button 
-                      variant="outline" 
-                      className="flex-1 max-w-[200px] bg-black text-white hover:bg-white hover:text-black border-black"
-                    >
-                      View Thali
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="flex-1 max-w-[200px] ml-4 bg-black text-white hover:bg-white hover:text-black border-black"
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </main>
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-   )
+interface MenuItem {
+  id: number
+  name: string
+  description: string
+  image: string
+  quantity: number
+  hasButter: boolean
 }
+
+export default function MenuPage() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+    {
+      id: 1,
+      name: "Tandoori Roti",
+      description: "Soft, fluffy roti, hand-tossed and baked in a hot tandoor.",
+      image: "/images/roti.png",
+      quantity: 0,
+      hasButter: false,
+    },
+    {
+      id: 2,
+      name: "Naan",
+      description: "Soft, fluffy naan, hand-tossed and baked in a hot tandoor.",
+      image: "/images/roti.png",
+      quantity: 0,
+      hasButter: false,
+    },
+  ])
+
+  const updateQuantity = (id: number, increment: boolean) => {
+    setMenuItems(items =>
+      items.map(item =>
+        item.id === id
+          ? {
+              ...item,
+              quantity: increment
+                ? item.quantity + 1
+                : Math.max(0, item.quantity - 1),
+            }
+          : item
+      )
+    )
+  }
+
+  const toggleButter = (id: number) => {
+    setMenuItems(items =>
+      items.map(item =>
+        item.id === id ? { ...item, hasButter: !item.hasButter } : item
+      )
+    )
+  }
+
+  return (
+    <div className="flex min-h-[100vh] h-auto bg-foreground flex-col text-[black] mt-[70px] pb-[20%] md:pb-[5%]">
+      <MenuBar  />
+      <div className="flex flex-1 md:flex-row flex-col mt-[20px] ml-[5px]"> {/* Add margin-top here */}
+        <Sidebar />
+        <div className="flex-1 p-4">
+          {/* <div className="md:hidden mb-4 flex justify-between items-center">
+            <select className="w-full max-w-[200px] p-2 rounded-lg border bg-white ml-2">
+              <option>Select a menu item</option>
+              {["Breads", "Appetizers", "Rice", "Sabzi", "Paneer ki Sabzi", "Dal", "Beverages"].map(
+                (category) => (
+                  <option key={category}>{category}</option>
+                )
+              )}
+            </select>
+          </div> */}
+
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <h1 className="text-4xl font-bold font-poorStory">Breads</h1>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-2">
+              {menuItems.map((item) => (
+                <MenuItemCard
+                  key={item.id}
+                  {...item}
+                  onQuantityChange={updateQuantity}
+                  onButterToggle={toggleButter}
+                />
+              ))}
+            </div>
+
+            <div className="flex justify-end">
+              <Button className="bg-black text-white hover:bg-black/90">
+                Next
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
