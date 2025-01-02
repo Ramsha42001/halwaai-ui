@@ -17,7 +17,7 @@ export default function ModalCard({
     const [isPreviewOpen, setIsPreviewOpen] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
   return (
-    <Card className={`border-2 ${showOnLoad ? "border-blue-500" : "border-gray-200"}`}>
+    <Card className={"border-2 border-gray-200"}>
       <CardContent className="pt-6">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="text-gray-600 mb-4">{description}</p>
