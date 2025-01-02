@@ -34,7 +34,7 @@ export default function Header() {
         </button>
 
         {/* Navigation Links */}
-        <NavigationMenu className={`lg:flex ${isMenuOpen ? 'flex' : 'hidden'} flex-col lg:flex-row absolute lg:relative top-16 lg:top-0 right-[10px] lg:left-auto w-full lg:w-auto bg-black lg:bg-transparent z-50`}>
+        <NavigationMenu className={`lg:flex ${isMenuOpen ? 'flex' : 'hidden'} flex-col lg:flex-row absolute lg:relative top-16 lg:top-0 right-[10px] lg:left-auto w-full lg:w-auto bg-black lg:bg-transparent z-[50]`}>
           <NavigationMenuList className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-6 p-4 lg:p-0">
             <NavigationMenuItem>
               <NavigationMenuLink

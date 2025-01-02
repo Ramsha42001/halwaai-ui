@@ -55,31 +55,31 @@ export default function Address() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF5F5] text-[black]">
-      <div className="mt-[70px]">
-        <Button variant="default" className="bg-black hover:text-[black] m-[30px]">
+    <div className="min-h-[100vh] h-auto bg-[#FFF5F5] text-[black] px-4 pb-20 md:px-6 lg:px-8">
+      <div className="py-[90px] md:pt-[70px]">
+        <Button variant="default" className="bg-black hover:text-[black] mb-4 md:m-[30px]">
           <ChevronLeft /> Back
         </Button>
 
-        <div className="w-full mx-auto px-4">
-          <h2 className="font-poorStory font-semibold text-3xl text-[black] py-[20px] text-center">
+        <div className="w-full mx-auto">
+          <h2 className="font-poorStory font-semibold text-2xl md:text-3xl text-[black] py-3 md:py-[20px] text-center">
             Set up your billing address
           </h2>
 
-          <div className="w-full min-h-[80vh] flex flex-col md:flex-row gap-8 justify-between items-start">
+          <div className="w-full min-h-[80vh] flex flex-col md:flex-row gap-4 md:gap-8 justify-between items-start">
             {/* Left side - Image */}
-            <div className="w-full md:w-[40%] flex justify-center items-start">
-              <img 
-                src="/images/thali1.png" 
-                alt="Thali" 
-                className="rounded-lg max-w-[400px] w-full"
-              />
-            </div>
+            <div className="w-full md:w-[40%] flex justify-center items-start mb-6 md:mb-0 hidden md:flex">
+  <img 
+    src="/images/thali1.png" 
+    alt="Thali" 
+    className="rounded-lg w-full max-w-[300px] md:max-w-[400px] object-cover"
+  />
+</div>
 
             {/* Right side - Form */}
-            <div className="w-full md:w-[50%] mr-[5%]">
+            <div className="w-full md:w-[50%] md:mr-[5%]">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
                   {/* Name Fields */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
@@ -89,7 +89,7 @@ export default function Address() {
                         <FormItem>
                           <FormLabel>First Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="John" className="bg-gray-50/50" {...field} />
+                            <Input placeholder="John" className="bg-gray-50/50 h-11 md:h-12 px-4" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -102,7 +102,7 @@ export default function Address() {
                         <FormItem>
                           <FormLabel>Last Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Doe" className="bg-gray-50/50" {...field} />
+                            <Input placeholder="Doe" className="bg-gray-50/50 h-11 md:h-12 px-4" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -121,7 +121,7 @@ export default function Address() {
                           <Input 
                             type="email" 
                             placeholder="john@example.com" 
-                            className="bg-gray-50/50" 
+                            className="bg-gray-50/50 h-11 md:h-12 px-4" 
                             {...field} 
                           />
                         </FormControl>
@@ -141,7 +141,7 @@ export default function Address() {
                           <FormControl>
                             <Input 
                               placeholder="+91-1234567890" 
-                              className="bg-gray-50/50" 
+                              className="bg-gray-50/50 h-11 md:h-12 px-4" 
                               {...field} 
                             />
                           </FormControl>
@@ -158,7 +158,7 @@ export default function Address() {
                           <FormControl>
                             <Input 
                               placeholder="123456" 
-                              className="bg-gray-50/50" 
+                              className="bg-gray-50/50 h-11 md:h-12 px-4" 
                               {...field} 
                             />
                           </FormControl>
@@ -178,7 +178,7 @@ export default function Address() {
                         <FormControl>
                           <Input 
                             placeholder="123 main street" 
-                            className="bg-gray-50/50" 
+                            className="bg-gray-50/50 h-11 md:h-12 px-4" 
                             {...field} 
                           />
                         </FormControl>
@@ -196,7 +196,7 @@ export default function Address() {
                         <FormControl>
                           <Input 
                             placeholder="123 park" 
-                            className="bg-gray-50/50" 
+                            className="bg-gray-50/50 h-11 md:h-12 px-4" 
                             {...field} 
                           />
                         </FormControl>
@@ -210,7 +210,7 @@ export default function Address() {
                     control={form.control}
                     name="saveAddress"
                     render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-2">
                         <FormControl>
                           <Checkbox
                             checked={field.value}
@@ -230,7 +230,7 @@ export default function Address() {
                   {/* Submit Button */}
                   <Button 
                     type="submit"
-                    className="w-full bg-black hover:bg-gray-800 text-white py-6"
+                    className="w-full bg-black hover:bg-gray-800 text-white h-12 md:h-14 mt-6"
                   >
                     Proceed to add billing details
                   </Button>
@@ -244,3 +244,4 @@ export default function Address() {
     </div>
   )
 }
+
