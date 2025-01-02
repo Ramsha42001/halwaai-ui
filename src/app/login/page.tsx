@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-foreground text-[black] flex-column">
         <Header />
-        <main className="min-h-screen bg-foreground flex items-center justify-center p-4">
+        <main className="min-h-screen bg-foreground flex items-center justify-center p-4 mt-[70px]">
       <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex">
         <div className="w-1/2 relative hidden md:block">
           <img
