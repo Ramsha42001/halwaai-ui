@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { orders } from '@/app/data/orders'
+import Link from 'next/link'
 
 export default function History() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -29,9 +30,11 @@ export default function History() {
     <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
       <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b text-[black] z-30">
         <div className="flex items-center gap-4">
+          <Link href="/user/address">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          </Link>
           <h1 className="text-xl md:text-2xl font-semibold">Order History</h1>
         </div>
         <div className="flex items-center gap-2">

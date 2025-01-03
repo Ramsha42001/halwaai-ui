@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
+import Link from "next/link";
 
 export function LoginForm() {
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,10 +47,21 @@ export function LoginForm() {
           <FcGoogle className="w-5 h-5" />
           Login with Google
         </Button>
-
-        <Button type="submit" className="w-full bg-black hover:bg-gray-800">
-          Login
+          <Link href="/user">
+        <Button type="submit" className="w-full bg-black hover:bg-gray-800 my-[10px]">
+          Login as user
         </Button>
+
+
+        </Link>
+
+        <Link href="/admin">
+        <Button type="submit" className="w-full bg-black hover:bg-gray-800">
+          Login as admin
+        </Button>
+
+        
+        </Link>
       </form>
     </div>
   );

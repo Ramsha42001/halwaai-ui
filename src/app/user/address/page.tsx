@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Toast } from "@/components/ui/toast"
+import Link from "next/link"
 
 // Form validation schema
 const formSchema = z.object({
@@ -57,9 +58,11 @@ export default function Address() {
   return (
     <div className="min-h-[100vh] h-auto bg-[#FFF5F5] text-[black] px-4 pb-20 md:px-6 lg:px-8">
       <div className="py-[90px] md:pt-[70px]">
+        <Link href="/user/thali">
         <Button variant="default" className="bg-black hover:text-[black] mb-4 md:m-[30px]">
           <ChevronLeft /> Back
         </Button>
+        </Link>
 
         <div className="w-full mx-auto">
           <h2 className="font-poorStory font-semibold text-2xl md:text-3xl text-[black] py-3 md:py-[20px] text-center">
@@ -228,12 +231,14 @@ export default function Address() {
                   />
 
                   {/* Submit Button */}
+                  <Link href="/user/history">
                   <Button 
                     type="submit"
                     className="w-full bg-black hover:bg-gray-800 text-white h-12 md:h-14 mt-6"
                   >
                     Proceed to add billing details
                   </Button>
+                  </Link>
                 </form>
               </Form>
             </div>

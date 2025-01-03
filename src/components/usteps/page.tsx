@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
+import Link from "next/link";
 const steps = [
   {
     icon: "/images/thali.png",
@@ -91,12 +91,15 @@ export default function CustomizeThali() {
 
    {/* Buttons */}
    <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full">
+                            <Link href="/user">
                             <Button 
                                 className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
                                 size="lg"
                             >
                                 Customize your Thali
                             </Button>
+                            </Link>
+                            <Link href="/user/thali">
                             <Button 
                                 className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold px-6 py-3 w-full sm:w-auto" 
                                 variant="secondary" 
@@ -104,6 +107,7 @@ export default function CustomizeThali() {
                             >
                                 Order Predefined Thali
                             </Button>
+                            </Link>
                         </div>
           </div>
         </div>

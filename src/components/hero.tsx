@@ -1,8 +1,18 @@
+'use client'; // Add this line to mark the component as a client component
+
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Utensils, Percent, Truck } from 'lucide-react';
+import Link from 'next/link';
 
 export default function Hero() {
+    const handlePredefinedScroll = () => {
+        const predefinedSection = document.getElementById("predefined");
+        if (predefinedSection) {
+            predefinedSection.scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
     return (
         <div className="w-full min-h-[100vh] h-auto bg-background text-white px-4 sm:px-8 mt-[70px] md:mt-[50px] lg:mt-[70px] md:px-20 py-10">
             <div className="max-w-7xl mx-auto">
@@ -30,16 +40,20 @@ export default function Hero() {
 
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full sm:w-auto">
-                            <Button 
-                                className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
-                                size="lg"
-                            >
-                                Customize your Thali
-                            </Button>
+                            <Link href="/user">
+                                <Button 
+                                    className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
+                                    size="lg"
+                                >
+                                    Customize your Thali
+                                </Button>
+                            </Link>
+
                             <Button 
                                 className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold px-6 py-3 w-full sm:w-auto" 
                                 variant="secondary" 
                                 size="lg"
+                                onClick={handlePredefinedScroll} // Proper event handler
                             >
                                 Order Predefined Thali
                             </Button>
@@ -103,4 +117,3 @@ export default function Hero() {
         </div>
     );
 }
-

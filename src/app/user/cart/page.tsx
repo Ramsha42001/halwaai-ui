@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft } from 'lucide-react'
 import FoodCard from "@/components/cartCard/page"
 import { useState, useEffect } from "react"
+import Link from "next/link"
 
 const ThaliMenu = [
   {
@@ -40,12 +41,14 @@ export default function Cart() {
   }, [])
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen mt-[70px]">
       <main className="flex-grow pb-[45%] sm:pb-[45%] lg:pb-[5%]">
         <div className="container mx-auto px-4 py-8">
+          <Link href="/user">
           <Button variant="default" className="bg-black hover:bg-gray-800 text-white mb-6">
             <ChevronLeft className="mr-2 h-4 w-4" /> Back
           </Button>
+          </Link>
           <h1 className="text-black text-3xl md:text-4xl font-poorStory font-bold text-center mb-8">Your Cart</h1>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"> 
             {ThaliMenu.map((item) => (
@@ -60,11 +63,13 @@ export default function Cart() {
           <div className="border-2 border-black rounded-md px-4 py-2 w-full sm:w-auto text-center sm:text-left">
             <span className="font-bold text-black">Order Total: ₹ {totalPrice}</span>
           </div>
+          <Link href="/user/address">
           <Button 
             className="bg-black hover:bg-gray-800 text-white px-8 py-2 w-full sm:w-auto"
           >
             Proceed to checkout
           </Button>
+          </Link>
         </div>
       </footer>
     </div>

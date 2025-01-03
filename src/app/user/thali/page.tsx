@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from 'lucide-react';
-
+import Link from "next/link";
 const menuItems = [
   {
     id: 1,
@@ -55,9 +55,11 @@ export default function Thali() {
   return (
     <div className="flex flex-col min-h-screen mt-[70px] text-[black] pb-[40%] sm:pb-[40%] lg:pb-[5%]">
       <div className="container mx-auto px-4">
+        <Link href="/user">
         <Button variant="default" className="bg-black hover:text-[black] my-4">
           <ChevronLeft className="mr-2" />Back
         </Button>
+        </Link>
         
         <h2 className="font-poorStory font-semibold text-2xl md:text-3xl text-[black] py-4 md:py-[20px] text-center">
           Selected Items In The Thali
@@ -108,11 +110,13 @@ export default function Thali() {
               >
                 Add to Cart
               </Button>
+              <Link href="/user/address">
               <Button 
                 className="bg-black hover:bg-gray-800 text-white px-8 py-2 w-full sm:w-auto"
               >
                 Proceed to checkout
               </Button>
+              </Link>
             </div>
           </div>
         </div>

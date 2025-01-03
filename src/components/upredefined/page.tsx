@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { IceCreamBowlIcon as Bowl, CroissantIcon as Bread, IceCream2, UtensilsCrossed } from 'lucide-react'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel"
-
+import Link from 'next/link';
 const thalis = [
   {
     title: "Maharaja Thali",
@@ -43,7 +43,7 @@ const menuItems = [
 
 export default function PredefinedThali() {
   return (
-    <div className="min-h-screen bg-[#FFF5F5] py-8 px-4 sm:py-16">
+    <div id="predefined" className="min-h-screen bg-[#FFF5F5] py-8 px-4 sm:py-16">
       <div className="container mx-auto">
         <h1 className="text-4xl md:text-5xl text-center font-poorStory mb-8 sm:mb-12 text-[black]">
           Check out our Pre-defined Thalis
@@ -94,9 +94,11 @@ export default function PredefinedThali() {
         </div>
 
         <div className="flex justify-center ">
+          <Link href="/user/thali">
           <Button size="lg" className="bg-black text-white hover:bg-black/90">
             Order Predefined Thali
           </Button>
+          </Link>
         </div>
       </div>
     </div>

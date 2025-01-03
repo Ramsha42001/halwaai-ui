@@ -3,7 +3,7 @@
 import { MapPin, Clock, Truck } from 'lucide-react';
 import Image from "next/image";
 import { Button } from "../ui/button";
-
+import Link from 'next/link';
 export default function Home() {
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen bg-foreground text-black px-4 sm:px-6 md:px-8 lg:px-12 xl:px-20">
@@ -26,15 +26,19 @@ export default function Home() {
           </h4>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
+          <Link href="/user">
           <Button className="w-full sm:w-auto bg-black text-white hover:bg-white/90">
             Customize your Thali
           </Button>
+          </Link>
+          <Link href="/user/thali">
           <Button
             variant="outline"
             className="w-full sm:w-auto bg-accent text-black hover:bg-white/90 border-black"
           >
             Order Predefined Thali
           </Button>
+          </Link>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center mt-8 lg:mt-0">
