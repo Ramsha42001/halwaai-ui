@@ -15,7 +15,7 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black text-white z-50 md:hidden">
-      <div className="flex justify-around items-center h-20 w-full mx-auto">
+      <div className="flex justify-around items-center h-15 w-full mx-auto">
         {/* Only show these links if not on user routes */}
         {!isUserRoute && (
           <>
@@ -40,13 +40,13 @@ export default function BottomNav() {
             </Link>
 
             <Link 
-              href="/user/history"
+              href="/login"
               className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
                 pathname === '/orders' ? 'text-primary' : 'text-white'
               }`}
             >
               <ClipboardList className="h-6 w-6" />
-              <span className="text-xs text-center">Your Orders</span>
+              <span className="text-xs text-center">Login</span>
             </Link>
           </>
         )}
