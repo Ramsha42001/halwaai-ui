@@ -25,10 +25,11 @@ export default function MenuPage() {
   const [isMenuFormOpen, setIsMenuFormOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#fff5f5] text-[black] flex-column">
+    <div className="min-h-screen bg-[#fff5f5] text-[black] flex-column pb-[5%]">
       {/* <Header /> */}
-        <SubHeader />
-      <main className="p-4 md:p-8">
+      <div className="hidden lg:block"><SubHeader /></div>
+        {/* <SubHeader /> */}
+      <main className="p-4 md:p-8 mt-[70px]">
         <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-8">Menu Items</h1>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 md:mb-12">

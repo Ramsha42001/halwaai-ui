@@ -9,12 +9,12 @@ import  SubHeader  from "@/components/sub-header"
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#fff5f5] text-[black] flex-column">
-        <SubHeader />
+    <div className="min-h-screen bg-[#fff5f5] text-[black] flex-column mt-[70px] pb-[10%] sm:pb-[10%] lg:pb-[3%]">
+        {/* <SubHeader /> */}
         <main className="container mx-auto p-8">
       <div className="mb-8">
         
-        <h1 className="text-3xl font-bold mb-6">Modal Management</h1>
+        <h1 className="text-3xl font-bold mb-6 w-full">Modal Management</h1>
         <div className="flex gap-4">
           <Tabs defaultValue="existing" className="w-full">
             <TabsList className="flex gap-4 justify-between bg-[#FBEDE9]">
@@ -32,7 +32,7 @@ export default function Home() {
               </div>
             </TabsContent>
             <TabsContent value="new">
-              <div className="mt-6">
+              <div className="mt-6 w-auto">
                 <h2 className="text-xl font-semibold mb-4">Create New Modal</h2>
                 {/* Add form component here */}
               </div>

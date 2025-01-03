@@ -80,9 +80,9 @@ export default function Header() {
           )}
 
           {/* Mobile Navigation - Login & Signup */}
-        {!showUserDropdown &&(  <div className={`lg:hidden ${isMenuOpen ? 'block' : 'hidden'} space-y-4 mt-4`}>
+        {!showUserDropdown &&(  <div className={`lg:hidden ${isMenuOpen ? 'block' : 'hidden'} space-y-4 mt-4 p-2`}>
             <Link href="/login">
-              <button className="w-full border border-white px-4 py-2 rounded-md hover:bg-white hover:text-black transition-colors">
+              <button className="my-[5px] w-full border border-white px-4 py-2 rounded-md hover:bg-white hover:text-black transition-colors">
                 Login
               </button>
             </Link>

@@ -16,13 +16,15 @@ export default function PredefinedThaalis() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#fff5f5] ">
+    <div className="min-h-screen bg-[#fff5f5] pb-[5%]">
+      <div className="hidden lg:block">
         <SubHeader />
+        </div>
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
 
-        <div className="flex flex-row justify-between items-start mb-8">
-          <h1 className="text-3xl text-black font-bold mb-2 sm:text-2xl">Your Predefined Thalis</h1>
+        <div className="flex flex-col sm:flex-col lg:flex-row justify-between items-center sm:items-center lg:items-start mb-8 mt-[70px]">
+          <h1 className="text-3xl text-black font-bold mb-2 sm:text-2xl px-[10px] pt-[5%] sm:pt-[5%] lg:pt-[0%]">Your Predefined Thalis</h1>
           <Button 
             onClick={() => setIsAddThaliOpen(true)}
             className="mt-4 bg-black hover:bg-gray-800 flex items-center"
