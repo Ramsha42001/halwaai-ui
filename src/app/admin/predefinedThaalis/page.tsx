@@ -22,7 +22,7 @@ export default function PredefinedThaalis() {
         {/* Header Section */}
 
         <div className="flex flex-row justify-between items-start mb-8">
-          <h1 className="text-3xl text-black font-bold mb-2">Your Predefined Thalis</h1>
+          <h1 className="text-3xl text-black font-bold mb-2 sm:text-2xl">Your Predefined Thalis</h1>
           <Button 
             onClick={() => setIsAddThaliOpen(true)}
             className="mt-4 bg-black hover:bg-gray-800 flex items-center"
@@ -33,18 +33,19 @@ export default function PredefinedThaalis() {
         </div>
 
         {/* Thalis Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {menuItems.map((item, index) => (
-            <ThaliCard
-              key={index}
-              title={item.name}
-              items={item.dishes}
-              image={item.image}
-              onClick={() => console.log(`Edit ${item.name}`)}
-              onDelete={() => console.log(`Delete ${item.name}`)}
-            />
-          ))}
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20 sm:mb-[100px] justify-items-center">{/* Adjusted margins, justify-items */}
+  {menuItems.map((item, index) => (
+    <ThaliCard
+      key={index}
+      title={item.name}
+      items={item.dishes}
+      image={item.image}
+      onClick={() => console.log(`Edit ${item.name}`)}
+      onDelete={() => console.log(`Delete ${item.name}`)}
+    />
+  ))}
+</div>
+
 
         {/* Add Thali Popup */}
         <CustomPopup

@@ -30,7 +30,7 @@ export function MenuItemCard({
   const [isToggled, setIsToggled] = useState(false)
   return (
     <>
-    <Card className="bg-[#997864] border-[1px] border-[black] w-full md:w-[350px]">
+    <Card className="bg-[#997864] border-[1px] border-[black] w-full md:w-[350px] mb-[10px]">
       <CardContent className="p-4">
         <div className="relative">
           <img
