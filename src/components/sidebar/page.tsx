@@ -1,19 +1,46 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Menu } from 'lucide-react'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Menu } from "lucide-react"
+import { storageService } from "@/utils/storage"
+import { useEffect, useState } from "react"
+// import { MenuItem } from "@/types/menu"
+import { useStore } from '@/services/store/menuItemsStore'
+import menuItemService from '@/services/api/menuItemService'
 
-// Dummy selected menu items and their quantities
-const selectedItems = [
-  { id: 1, name: "Tandoori Roti", quantity: 2 },
-  { id: 2, name: "Spring Rolls", quantity: 1 },
-  { id: 3, name: "Masala Chai", quantity: 3 },
-]
+interface MenuItem {
+  _id: string; // Ensure this matches the ID used in selectedItems
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  category: {
+    _id: string;
+    name: string;
+  };
+  hasButter?: boolean;
+  quantity: number;
+}
 
-export function Sidebar() {
-  // Simulate Thali progress percentage (you can calculate this based on your logic)
-  const thaliProgress = 70 // Example: 70% progress
+interface Category {
+  _id: string,
+  selectedForThali: boolean
+}
+
+interface SidebarProps {
+  menuItems: MenuItem[];
+  requiredCategory: Category[];
+}
+
+export function Sidebar({ menuItems, requiredCategory }: SidebarProps) {
+  const { selectedItems } = useStore();
+
+  const thaliProgress = JSON.parse(localStorage.getItem('thaliProgress') || '0');
+  console.log(thaliProgress)
+
+
+
 
   return (
     <div className="w-64">
@@ -27,36 +54,33 @@ export function Sidebar() {
 
         <SheetContent side="left">
           <SheetHeader>
-            {/* Title for screen readers */}
             <SheetTitle className="sr-only">Sidebar Menu</SheetTitle>
-            <SheetDescription>
-              {/* Here's the sidebar menu content */}
-            </SheetDescription>
           </SheetHeader>
-          
-          <div className="mt-6 space-y-4">
-            {/* Thali Progress Section */}
-            <h2 className="text-4xl font-semibold text-[white] font-poorStory">Thali Progress</h2>
-            
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div className="bg-[black] h-2.5 rounded-full" style={{ width: `${thaliProgress}%` }}></div>
-            </div>
-            <p className="text-md mt-1 text-[white]">{thaliProgress}% Completed</p>
 
-            {/* Selected Items Section */}
+          <div className="mt-6 space-y-4">
+            <h2 className="text-4xl font-semibold text-[white] font-poorStory">Thali Progress</h2>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-[black] h-2.5 rounded-full"
+                style={{ width: `${Math.min(thaliProgress, 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-md mt-1 text-[white]">{Math.round(thaliProgress)}% Completed</p>
+
             <p className="text-md text-[white] mt-4">Selected Items:</p>
-            <ul className="space-y-2 mt-2">
-              {selectedItems.map((item) => (
-                <li key={item.id} className="flex justify-between items-center text-sm text-[white]">
-                  <span>{item.name}</span>
-                  <span className="bg-gray-200 px-2 py-1 rounded-md text-gray-800">Quantity: {item.quantity}</span>
-                </li>
-              ))}
+            <ul className="space-y-4 mt-2">
+              {Array.from(selectedItems.entries()).map(([id, quantity]) => {
+                const item = menuItems.find(item => item._id === id);
+                return (
+                  <li key={id}>
+                    {item ? `${item.name}: Quantity ${quantity}` : `Item ID: ${id}, Quantity: ${quantity}`}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </SheetContent>
       </Sheet>
     </div>
-  )
+  );
 }

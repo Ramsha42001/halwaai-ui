@@ -1,145 +1,127 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from 'lucide-react'
 import { MenuItemCard } from '@/components/menuItemCard/page'
 import { Sidebar } from '@/components/sidebar/page'
 import { MenuBar } from '@/components/MenuBar/page'
+import menuItemService from '@/services/api/menuItemService'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useStore } from '@/services/store/menuItemsStore'
+import categoryService from '@/services/api/categoryService'
+
 interface MenuItem {
-  id: number
+  _id: string
   name: string
   description: string
-  image: string
+  imageUrl: string
+  price: number
+  category: {
+    _id: string
+    name: string
+  }
+  hasButter?: boolean
   quantity: number
-  hasButter: boolean
 }
 
-const menuData: Record<string, MenuItem[]> = {
-  breads: [
-    {
-      id: 1,
-      name: "Tandoori Roti",
-      description: "Soft, fluffy roti, hand-tossed and baked in a hot tandoor.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-    {
-      id: 2,
-      name: "Naan",
-      description: "Soft, fluffy naan, hand-tossed and baked in a hot tandoor.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-  ],
-  appetizers: [
-    {
-      id: 3,
-      name: "Spring Rolls",
-      description: "Crispy spring rolls filled with fresh vegetables.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-    {
-      id: 4,
-      name: "Samosa",
-      description: "Golden fried samosas with spicy potato filling.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-  ],
-  beverages: [
-    {
-      id: 5,
-      name: "Masala Chai",
-      description: "Aromatic Indian tea with spices.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-    {
-      id: 6,
-      name: "Lassi",
-      description: "Refreshing yogurt-based drink.",
-      image: "/images/roti.png",
-      quantity: 0,
-      hasButter: false,
-    },
-  ],
+interface Category {
+  _id: string,
+  name: string,
+  requiredThali: string
 }
+
+interface RequiredCategoryItems {
+  _id: string,
+  selectedForThali: boolean
+}
+
+
 
 export default function MenuPage() {
-  const [selectedCategory, setSelectedCategory] = useState<string>("breads")
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(menuData["breads"] || [])
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const { selectedItems, addItem, removeItem } = useStore();
+  const router = useRouter()
+  const [category, setCategory] = useState<Category[]>([]);
+  const [requiredCategoryItems, setRequiredCategoryItems] = useState<RequiredCategoryItems[]>(() => {
+    const storedItems = localStorage.getItem('requiredCategoryItems');
+    return storedItems ? JSON.parse(storedItems) : []; // Default to an empty array if null
+  });
 
-  const handleCategoryChange = (category: string) => {
-    if (menuData[category]) {
-      setSelectedCategory(category)
-      setMenuItems(menuData[category])
-    } else {
-      console.warn(`Category "${category}" does not exist in menuData.`)
-      setMenuItems([]) // Clear items if category is invalid
-    }
-  }
+  useEffect(() => {
+    menuItemService.getMenuItems().then((response) => {
+      setMenuItems(response)
+    })
+  }, [])
 
-  const updateQuantity = (id: number, increment: boolean) => {
-    setMenuItems((items) =>
-      items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: increment
-                ? item.quantity + 1
-                : Math.max(0, item.quantity - 1),
-            }
-          : item
-      )
-    )
-  }
+  useEffect(() => {
+    categoryService.getCategories().then((response) => {
+      setCategory(response);
+      console.log("Fetched Categories:", response); // Log fetched categories
+      const requiredCategory = response.filter((cat: Category) => cat && cat.requiredThali === 'yes');
+      console.log("Filtered Required Categories:", requiredCategory); // Log filtered categories
+      const initialRequiredCategories = requiredCategory.map((item: Category) => ({
+        _id: item._id,
+        selectedForThali: false
+      }));
+      setRequiredCategoryItems(initialRequiredCategories);
+      localStorage.setItem('requiredCategoryItems', JSON.stringify(initialRequiredCategories)); // Save to local storage
+    });
+  }, []);
 
-  const toggleButter = (id: number) => {
-    setMenuItems((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, hasButter: !item.hasButter } : item
-      )
-    )
-  }
+  useEffect(() => {
+    // Save requiredCategoryItems to local storage whenever it changes
+    localStorage.setItem('requiredCategoryItems', JSON.stringify(requiredCategoryItems));
+  }, [requiredCategoryItems]);
+
+  console.log(requiredCategoryItems)
+
+  const filteredMenuItems = selectedCategory
+    ? menuItems.filter(item => item.category && item.category._id === selectedCategory)
+    : menuItems
 
   return (
     <div className="flex min-h-[100vh] h-auto bg-foreground flex-col text-[black] mt-[70px] pb-[20%] md:pb-[5%]">
-      <MenuBar onCategorySelect={handleCategoryChange} />
+      <MenuBar onCategorySelect={(category) => {
+        setSelectedCategory(category);
+      }} />
       <div className="flex flex-1 md:flex-row flex-col mt-[20px] ml-[5px]">
-        <Sidebar />
+        <Sidebar menuItems={menuItems} requiredCategory={requiredCategoryItems} />
         <div className="flex-1 p-4">
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-4xl font-bold font-poorStory capitalize">{selectedCategory}</h1>
+              <h1 className="text-4xl font-bold font-poorStory capitalize">Menu Items</h1>
+            </div>
+            <div>
             </div>
             <div className="grid md:grid-cols-2 gap-2">
-              {menuItems.length > 0 ? (
-                menuItems.map((item) => (
-                  <MenuItemCard
-                    key={item.id}
-                    {...item}
-                    onQuantityChange={updateQuantity}
-                    onButterToggle={toggleButter}
-                  />
-                ))
-              ) : (
-                <p className="text-gray-500">No items available for this category.</p>
-              )}
+              {filteredMenuItems.map((item) => (
+                <MenuItemCard
+                  key={item._id}
+                  id={item._id}
+                  name={item.name}
+                  description={item.description}
+                  image={item.imageUrl}
+                  price={item.price}
+                  category={selectedCategory}
+                  requiredCategory={requiredCategoryItems}
+                />
+              ))}
             </div>
-            <div className="flex justify-end">
-              <Link href="/user/thali">
-              <Button className="bg-black text-white hover:bg-black/90">
-                Next
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Button>
+            <div className="flex justify-end mt-4">
+              <Link
+                href={{
+                  pathname: '/user/thali',
+                }}
+              >
+                <Button
+                  className="bg-black text-white hover:bg-black/90"
+                >
+                  Next
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
               </Link>
             </div>
           </div>

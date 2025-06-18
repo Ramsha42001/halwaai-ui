@@ -1,26 +1,49 @@
-'use client'
+import { useState, useEffect } from 'react';
+import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useStore } from '@/services/store/menuItemsStore';
+import { cartService } from "@/services/api/cartService"
 
-import { useState } from 'react'
-import { Minus, Plus, Trash2 } from 'lucide-react'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-
-// Define types for props
 interface Item {
-  name: string
-  price: number
+  id: string;
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 interface FoodCardProps {
-  heading: string
-  items: Item[]
+  heading: string;
+  id: string;
+  thaliquantity: number;
+  items: Item[];
 }
 
-export default function FoodCard({ heading, items }: FoodCardProps) {
-  const [quantity, setQuantity] = useState<number>(1)
+export default function FoodCard({ heading, items, id, thaliquantity }: FoodCardProps) {
+  const [quantity, setQuantity] = useState<number>(1);
+  // const { orderTotal, setOrderTotal } = useStore();
 
-  const increaseQuantity = () => setQuantity((prev) => prev + 1)
-  const decreaseQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
+  const calculateTotalPrice = () => {
+    const total = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return total;
+  };
+
+  useEffect(() => {
+    const total = calculateTotalPrice();
+  }, [items]); // Recalculate when items change
+
+  const increaseQuantity = async () => {
+    setQuantity((prev) => prev + 1);
+    await cartService.updateTotalPrice(id, quantity + 1); // Update with the new quantity
+  };
+
+  const decreaseQuantity = async () => {
+    setQuantity((prev) => {
+      const newQuantity = prev > 1 ? prev - 1 : prev;
+      cartService.updateTotalPrice(id, newQuantity); // Update with the new quantity
+      return newQuantity;
+    });
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto bg-white rounded-3xl mb-6 font-poppins">
@@ -35,7 +58,7 @@ export default function FoodCard({ heading, items }: FoodCardProps) {
           >
             <Minus className="h-4 w-4" />
           </Button>
-          <span className="text-xl min-w-[1.5rem] text-center">{quantity}</span>
+          <span className="text-xl min-w-[1.5rem] text-center">{thaliquantity}</span>
           <Button
             variant="outline"
             size="icon"
@@ -57,16 +80,20 @@ export default function FoodCard({ heading, items }: FoodCardProps) {
               className="flex justify-between items-center text-gray-600"
             >
               <span>{item.name}</span>
-              <span>₹ {item.price}</span>
+              <span>{item.quantity} x ₹{item.price}</span>
             </div>
           ))}
         </div>
+        <div className="flex justify-between items-center border-t border-gray-200 pt-4">
+          <span className="font-semibold">Total Price:</span>
+          <span className="font-bold text-lg">₹{calculateTotalPrice()}</span>
+        </div>
         <div className="flex justify-center">
-          <div >
+          <div>
             <img src="/images/thali1.png" />
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

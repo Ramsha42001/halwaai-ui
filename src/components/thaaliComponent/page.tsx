@@ -1,76 +1,192 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
-import { Card } from "@/components/adminCard/page";
+import { Card, CardContent, CardHeader } from "@/components/adminCard/page";
 import { Button } from "../ui/button";
 import Image from "next/image";
-import { DishItem } from "@/types/menu";
+import { useState, useEffect } from "react";
+import { menuItems } from "@/data/menu-items";
+import { cartService } from "@/services/api/cartService";
 
-
-interface ThaliCardProps {
-  title: string;
-  items: DishItem[];
-  image: string;
-  onClick: () => void;
-  onDelete: () => void;
+interface MenuItem {
+  _id: string;
+  name: string;
+  price: number;
+  quantity: number;
 }
 
+interface ThaliCardProps {
+  _id?: string;
+  title: string;
+  description: string;
+  items: MenuItem[];
+  image: string;
+  price: number;
+  onClick?: () => void;
+  onDelete?: () => void;
+  showButton: boolean;
+}
+
+
+
 export function ThaliCard({
+  _id,
   title,
+  description,
   items,
   image,
+  price,
   onClick,
   onDelete,
+  showButton
 }: ThaliCardProps) {
-  
+  const [isHovered, setIsHovered] = useState(false);
+  const [quantity, setQuantity] = useState(0);
+
+  const selectedThali = JSON.parse(localStorage.getItem('selectedThali'));
+
+  useEffect(() => {
+    const selectedThaliString = localStorage.getItem('selectedThali');
+    if (selectedThaliString) {
+      const selectedThali = JSON.parse(selectedThaliString);
+      setQuantity(selectedThali.quantity || 0);
+    }
+  }, []);
+
+  const handlePredefinedThaliItem = (thaliData: any) => {
+    setQuantity(quantity + 1);
+    localStorage.setItem('selectedThali', JSON.stringify({
+      _id: thaliData._id,
+      title: thaliData.title,
+      description: thaliData.description,
+      items: thaliData.items,
+      image: thaliData.image,
+      price: thaliData.price,
+      quantity: quantity + 1
+    }));
+  }
+
+  const uploadImage = async () => {
+    console.log('upload image function')
+  }
+
+  const thaliToCart = async () => {
+    const payload = {
+      thaliTitle: selectedThali.title,
+      menuItems: selectedThali.items.map((item: any) => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      })),
+      thaaliTotalPrice: selectedThali.price,
+      thaliquantity: selectedThali.quantity
+    }
+
+    console.log(payload); // Log the entire payload to see its structure
+    await cartService.addToCart(payload);
+  }
+
+  const increaseQuantity = () => {
+    setQuantity(quantity + 1);
+
+    const selectedThaliString = localStorage.getItem('selectedThali');
+    if (selectedThaliString) {
+      const selectedThali = JSON.parse(selectedThaliString);
+      selectedThali.quantity += 1; // Increment the quantity
+      localStorage.setItem('selectedThali', JSON.stringify(selectedThali));
+    }
+  }
+
+  const decreaseQuantity = () => {
+    if (quantity > 0) {
+      setQuantity(quantity - 1);
+
+      const selectedThaliString = localStorage.getItem('selectedThali');
+      if (selectedThaliString) {
+        const selectedThali = JSON.parse(selectedThaliString);
+        selectedThali.quantity = Math.max(0, selectedThali.quantity - 1); // Decrement the quantity
+        localStorage.setItem('selectedThali', JSON.stringify(selectedThali));
+      }
+    }
+  }
 
   return (
-    <Card className="overflow-hidden bg-white rounded-lg border-2 border-black w-[307px] h-[500px]">
-      <div className="p-4">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-black">{title}</h3>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => {}}
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 border-gray-300"
-            >
-              <Pencil className="h-4 w-4 text-black" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={onDelete}
-              className="h-8 w-8 bg-white border-gray-300 text-red-500 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+    <>
+
+      <div className="relative w-[400px] min-h-[500px] h-auto mx-[20px]">
+        <div className="absolute overflow-hidden  w-[300px] h-[300px] bg-[white] border-[2px] border-[black] mx-[50px] rounded-full">
+          <img src={image} alt={image} className="object-cover w-[100%] h-[100%]" />
+          <div onClick={uploadImage} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
+            <span className="text-white">Upload Image</span> {/* Replace with your desired content */}
           </div>
         </div>
 
-        {/* Items Section */}
-        <div className="space-y-2 text-sm text-gray-600 mb-4">
-          {items.map((item, index) => (
-            <div key={index} className="flex justify-between items-center">
-              <span>{item.name}</span>
-              <span className="font-bold text-black">₹ {item.price}</span>
-            </div>
-          ))}
-        </div>
+        <Card className="bg-[#997864] text-white border-none min-h-[350px] h-auto mt-[150px] pb-[5%]">
+          <CardHeader className="pt-[170px]  flex flex-row justify-between items-start">
+            <h2 className="text-2xl font-semibold">{title}</h2>
+            <p className="text-sm opacity-90">₹{price}</p>
+          </CardHeader>
+          <CardContent className="space-y-2 flex-grow">
+            {Object.entries(items).map(([category, item], idx) => (
+              <div key={item._id} className="flex items-center gap-3 flex-row justify-between">
+                {/* {menuItems[idx].icon}  */}
+                <span className="text-sm">{item.name}</span>
+                <span className="text-sm">{item.quantity}</span>
+              </div>
+            ))}
+          </CardContent>
+          {showButton && quantity <= 0 ? (
+            <><div className="flex flex-row justify-right mx-[10px]">
+              <Button
+                className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
+                onClick={onClick}
+              >
+                Edit Thali
+              </Button>
+              <Button
+                className="mt-4 bg-black hover:bg-gray-800 flex items-center"
+                onClick={onDelete}
+              >
+                Delete Thali
+              </Button>
+            </div></>
+          ) : quantity <= 0 ? (
+            <Button
+              className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
+              onClick={() => {
+                handlePredefinedThaliItem({
+                  _id,
+                  title,
+                  description,
+                  items,
+                  image,
+                  price
+                });
+                thaliToCart();
+              }}
+            >
+              Add Thali
+            </Button>
+          ) : <div className="absolute bottom-2 left-2 flex items-center">
+            <Button
+              className="bg-black hover:bg-gray-800 text-white"
+              onClick={increaseQuantity}
+            >
+              +
+            </Button>
+            <span className="mx-2 text-white">{quantity}</span>
+            <Button
+              className="bg-black hover:bg-gray-800 text-white"
+              onClick={decreaseQuantity}
+            >
+              -
+            </Button>
+          </div>}
+        </Card>
+
+
       </div>
 
-      {/* Image Section */}
-      <div className="relative w-full h-[200px]">
-        <Image
-          src={image}
-          alt={title}
-          width={307}
-          height={307}
-          className="object-cover"
-        />
-      </div>
-    </Card>
+    </>
   );
 }

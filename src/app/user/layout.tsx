@@ -16,7 +16,7 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
         
         {/* WhatsApp Icon */}
         <a
-          href="https://wa.me/yourwhatsappnumber" // Replace with your WhatsApp number or link
+          href="https://wa.me/8279243897" // Replace with your WhatsApp number or link
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-20 sm:bottom-20 lg:bottom-5 right-5 bg-green-500 p-3 rounded-full text-white z-[9999] hover:bg-green-600 transition-all"

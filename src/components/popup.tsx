@@ -27,7 +27,7 @@ export function CustomPopup({
 }: CustomPopupProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn("sm:max-w-[425px]", className)}>
+      <DialogContent className={cn("sm:max-w-[425px] max-h-[80vh] overflow-y-auto", className)}>
         {(title || description) && (
           <DialogHeader>
             {title && <DialogTitle>{title}</DialogTitle>}

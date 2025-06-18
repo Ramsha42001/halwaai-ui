@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +39,13 @@ const steps = [
 ];
 
 export default function CustomizeThali() {
+  const [authToken, setAuthToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Access localStorage only on the client side
+    setAuthToken(localStorage.getItem('authToken'));
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#D84315] text-white p-6">
       <div className="max-w-6xl mx-auto">
@@ -91,7 +101,9 @@ export default function CustomizeThali() {
 
    {/* Buttons */}
    <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full">
-                            <Link href="/user">
+                            <Link
+                            href={authToken ? '/user' : '/login'}
+                            >
                             <Button 
                                 className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
                                 size="lg"
@@ -99,7 +111,9 @@ export default function CustomizeThali() {
                                 Customize your Thali
                             </Button>
                             </Link>
-                            <Link href="/user/thali">
+                            <Link
+                            href={authToken ? '/user/thali' : '/login'}
+                            >
                             <Button 
                                 className="bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold px-6 py-3 w-full sm:w-auto" 
                                 variant="secondary" 

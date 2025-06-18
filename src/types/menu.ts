@@ -4,8 +4,14 @@ export interface DishItem {
   }
   
   export interface MenuItem {
+    _id: string;
     name: string;
-    dishes: DishItem[];
-    image: string;
-    category: string;
+    description: string;
+    price: number;
+    imageUrl?: string;
+    category: {
+      _id: string;
+      name: string;
+    };
+    requiredThali?: string;
   }

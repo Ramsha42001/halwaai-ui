@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Utensils, Percent, Truck } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'framer-motion'; // Import motion
 
 export default function Hero() {
     const handlePredefinedScroll = () => {
@@ -14,12 +15,22 @@ export default function Hero() {
     };
 
     return (
-        <div className="w-full min-h-[100vh] h-auto bg-background text-white px-4 sm:px-8 mt-[70px] md:mt-[50px] lg:mt-[70px] md:px-20 py-10">
+        <motion.div 
+            className="w-full min-h-[100vh] h-auto bg-background text-white px-4 sm:px-8 mt-[70px] md:mt-[50px] lg:mt-[70px] md:px-20 py-10"
+            initial={{ opacity: 0, y: 50 }} // Initial state
+            animate={{ opacity: 1, y: 0 }} // Animate to this state
+            transition={{ duration: 0.5 }} // Transition duration
+        >
             <div className="max-w-7xl mx-auto">
                 {/* Main Hero Section */}
                 <div className="w-full flex flex-col-reverse md:flex-row items-center justify-between mb-16">
                     {/* Left Section */}
-                    <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left space-y-6">
+                    <motion.div 
+                        className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left space-y-6"
+                        initial={{ opacity: 0, x: -50 }} // Initial state for left section
+                        animate={{ opacity: 1, x: 0 }} // Animate to this state
+                        transition={{ duration: 0.5, delay: 0.2 }} // Transition duration with delay
+                    >
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-wide font-poorStory">
                             Halwaai
                         </h1>
@@ -40,7 +51,9 @@ export default function Hero() {
 
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full sm:w-auto">
-                            <Link href="/user">
+                            <Link
+                             href={localStorage.getItem('authToken') ? '/user' : '/login'}
+                            >
                                 <Button 
                                     className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto" 
                                     size="lg"
@@ -58,10 +71,15 @@ export default function Hero() {
                                 Order Predefined Thali
                             </Button>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Right Section - Desktop Thali Image */}
-                    <div className="w-full md:w-1/2 flex items-center justify-center mt-10 md:mt-0 hidden md:flex">
+                    <motion.div 
+                        className="w-full md:w-1/2 flex items-center justify-center mt-10 md:mt-0 hidden md:flex"
+                        initial={{ opacity: 0, x: 50 }} // Initial state for right section
+                        animate={{ opacity: 1, x: 0 }} // Animate to this state
+                        transition={{ duration: 0.5, delay: 0.2 }} // Transition duration with delay
+                    >
                         <Image 
                             src="/images/combined3.png" 
                             alt="Traditional Indian Thali" 
@@ -69,19 +87,29 @@ export default function Hero() {
                             height={500} 
                             className="object-contain"
                         />
-                    </div>
+                    </motion.div>
                 </div>
 
                 {/* About Section */}
-                <div className="text-center mb-12">
+                <motion.div 
+                    className="text-center mb-12"
+                    initial={{ opacity: 0 }} // Initial state for about section
+                    animate={{ opacity: 1 }} // Animate to this state
+                    transition={{ duration: 0.5, delay: 0.4 }} // Transition duration with delay
+                >
                     <h3 className="text-2xl font-semibold mb-2 font-poorStory">About Halwaai</h3>
                     <p className="text-lg italic font-poppins">Crafting Flavors, Creating Memories—One Thali at a Time.</p>
-                </div>
+                </motion.div>
 
                 {/* Feature Boxes */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
                     {/* Customize Box */}
-                    <div className="bg-[#997864] p-6 rounded-lg text-center">
+                    <motion.div 
+                        className="bg-[#997864] p-6 rounded-lg text-center"
+                        initial={{ opacity: 0 }} // Initial state for feature boxes
+                        animate={{ opacity: 1 }} // Animate to this state
+                        transition={{ duration: 0.5, delay: 0.6 }} // Transition duration with delay
+                    >
                         <div className="flex justify-center mb-4">
                             <Utensils className="w-12 h-12" />
                         </div>
@@ -89,10 +117,15 @@ export default function Hero() {
                         <p className="text-sm">
                             Choose from thoughtfully curated categories to build a thali that uniquely yours. Perfect for special occasions, gatherings, or even everyday meals!
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Savings Box */}
-                    <div className="bg-[#FFD700] text-black p-6 rounded-lg text-center">
+                    <motion.div 
+                        className="bg-[#FFD700] text-black p-6 rounded-lg text-center"
+                        initial={{ opacity: 0 }} // Initial state for feature boxes
+                        animate={{ opacity: 1 }} // Animate to this state
+                        transition={{ duration: 0.5, delay: 0.6 }} // Transition duration with delay
+                    >
                         <div className="flex justify-center mb-4">
                             <Percent className="w-12 h-12" />
                         </div>
@@ -100,10 +133,15 @@ export default function Hero() {
                         <p className="text-sm">
                             Truly satisfying meals that give you more plates—ideal for meal gatherings with family, friends, or for yourself!
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Delivery Box */}
-                    <div className="bg-[#997864] p-6 rounded-lg text-center">
+                    <motion.div 
+                        className="bg-[#997864] p-6 rounded-lg text-center"
+                        initial={{ opacity: 0 }} // Initial state for feature boxes
+                        animate={{ opacity: 1 }} // Animate to this state
+                        transition={{ duration: 0.5, delay: 0.6 }} // Transition duration with delay
+                    >
                         <div className="flex justify-center mb-4">
                             <Truck className="w-12 h-12" />
                         </div>
@@ -111,9 +149,9 @@ export default function Hero() {
                         <p className="text-sm">
                             Never regional delicacies made fresh, that lets you savor authentic flavors at your doorstep, just when you need it!
                         </p>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState,useEffect } from 'react'
 import { ArrowLeft, MoreVertical, Download, Phone, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -21,10 +21,55 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { orders } from '@/app/data/orders'
 import Link from 'next/link'
+import {orderHistoryService} from '@/services/api/orderHistoryService';
+
+interface OrderHistory {
+  orderId: string;
+  orderDate: string;
+  menuItems: Map<string, any>;
+  deliveryAddress: {
+    street: string;
+    city: string;
+    zip: string;
+  };
+  customerDetails: {
+    name: string;
+    phoneNumber: string;
+    email: string;
+  };
+  status: string;
+  totalPrice: number;
+}
 
 export default function History() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('all')
+  const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchOrderHistory = async () => {
+      try {
+        const userId = localStorage.getItem('userId')
+        if (!userId) {
+          console.error('No user ID found')
+          return
+        }
+
+        const response = await orderHistoryService.getOrderHistoryUser(userId)
+        console.log('response:',response)
+        if (response) {
+          setOrderHistory(response)
+        }
+      } catch (error) {
+        console.error('Error fetching order history:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchOrderHistory()
+  }, []) 
 
   return (
     <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">

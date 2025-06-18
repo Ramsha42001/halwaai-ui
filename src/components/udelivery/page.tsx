@@ -26,12 +26,16 @@ export default function Home() {
           </h4>
         </div>
         <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
-          <Link href="/user">
+          <Link
+          href={localStorage.getItem('authToken') ? '/user' : '/login'}
+          >
           <Button className="w-full sm:w-auto bg-black text-white hover:bg-white/90">
             Customize your Thali
           </Button>
           </Link>
-          <Link href="/user/thali">
+          <Link
+          href={localStorage.getItem('authToken') ? '/user/thali' : '/login'}
+          >
           <Button
             variant="outline"
             className="w-full sm:w-auto bg-accent text-black hover:bg-white/90 border-black"

@@ -6,29 +6,46 @@ import Link from "next/link"
 interface MenuBarProps {
   onCategorySelect: (categoryId: string) => void
 }
+import { useState, useEffect } from 'react'
+import CategoryService from '@/services/api/categoryService'
 
-const categories = [
-  { id: "breads", name: "Breads" },
-  { id: "appetizers", name: "Appetizers" },
-  { id: "rice", name: "Rice" },
-  { id: "sabzi", name: "Sabzi" },
-  { id: "paneer", name: "Paneer & Subs" },
-  { id: "dal", name: "Dal" },
-  { id: "beverages", name: "Beverages" },
-  { id: "add-ons", name: "Add-Ons" }
-];
+
+interface Category {
+  _id: string
+  name: string
+}
 
 export function MenuBar({ onCategorySelect }: MenuBarProps) {
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+
+  useEffect(() => {
+      CategoryService.getCategories().then((response) => {
+        setCategories(response)
+        if (response.length > 0) {
+          setSelectedCategory(response[0]._id)
+          onCategorySelect(response[0]._id)
+        }
+      })
+  }, [])
+
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId)
+    onCategorySelect(categoryId)
+  }
+
   return (
     <div className="bg-[#2C2C2C] text-white p-4 flex items-center justify-between overflow-x-auto">
       {/* Categories for larger screens */}
       <div className="hidden md:flex space-x-4">
         {categories.map((category) => (
           <Button
-            key={category.id}
+            key={category._id}
             variant="ghost"
-            className="text-white hover:text-white/70 hover:bg-background"
-            onClick={() => onCategorySelect(category.id)}
+            className={`text-white hover:text-white/70 hover:bg-background ${
+              selectedCategory === category._id ? 'bg-background text-white' : ''
+            }`}
+            onClick={() => handleCategorySelect(category._id)}
           >
             {category.name}
           </Button>
@@ -39,10 +56,11 @@ export function MenuBar({ onCategorySelect }: MenuBarProps) {
       <div className="md:hidden">
         <select
           className="p-2 bg-black text-white rounded-lg"
-          onChange={(e) => onCategorySelect(e.target.value)}
+          value={selectedCategory}
+          onChange={(e) => handleCategorySelect(e.target.value)}
         >
           {categories.map((category) => (
-            <option key={category.id} value={category.id}>
+            <option key={category._id} value={category._id}>
               {category.name}
             </option>
           ))}

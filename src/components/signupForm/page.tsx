@@ -4,11 +4,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
+import { useState } from "react";
+import authService from "@/services/api/authService";
+import { useRouter } from 'next/navigation';
 
-export function SignupForm() {
-  const handleSubmit = (e: React.FormEvent) => {
+
+interface SignupFormProps {
+  onSubmit: (credentials: { firstName: string; lastName: string; email: string; password: string; confirmPassword: string; }) => Promise<void>;
+  isLoading: boolean;
+}
+
+
+
+
+
+export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, isLoading }) => {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const router = useRouter();
+
+  const googleSignup = async () => {
+    try {
+      window.location.href = 'http://localhost:3000/api/gauth/google';
+    } catch (error) {
+      console.error("Google signup error:", error);
+    }
+  };
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle signup logic here
+    await onSubmit({ firstName, lastName, email, password, confirmPassword });
   };
 
   return (
@@ -27,6 +57,9 @@ export function SignupForm() {
               type="text"
               placeholder="John"
               className="w-full"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
             />
           </div>
           <div className="space-y-2">
@@ -36,6 +69,9 @@ export function SignupForm() {
               type="text"
               placeholder="Doe"
               className="w-full"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
             />
           </div>
         </div>
@@ -47,6 +83,9 @@ export function SignupForm() {
             type="email"
             placeholder="johndoe@example.com"
             className="w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
 
@@ -57,6 +96,9 @@ export function SignupForm() {
             type="password"
             placeholder="••••••••"
             className="w-full"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
 
@@ -67,6 +109,9 @@ export function SignupForm() {
             type="password"
             placeholder="••••••••"
             className="w-full"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
           />
         </div>
 
@@ -74,15 +119,17 @@ export function SignupForm() {
           <Button
             variant="outline"
             className="flex-1 flex items-center justify-center gap-2 border-gray-300 bg-white"
+            type="button" // Important: Prevent form submission on Google button click
+            onClick={googleSignup}
           >
             <FcGoogle className="w-5 h-5" />
             Signup with Google
           </Button>
-          <Button type="submit" className="flex-1 bg-black hover:bg-gray-800">
-            Sign Up
+          <Button type="submit" className="flex-1 bg-black hover:bg-gray-800" disabled={isLoading}>
+            {isLoading ? "Signing up..." : "Sign up"}
           </Button>
         </div>
       </form>
     </div>
   );
-}
+};
