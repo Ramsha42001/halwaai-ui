@@ -44,11 +44,14 @@ const predefinedThaliService = {
     //     return response.data;
     // }
 
-    uploadImage: async (formData: FormData) => {
+    uploadImage: async (id: string, image: File) => {
+        const formData = new FormData();
+        formData.append('image', image); // Append the image file
+
         try {
-            const response = await apiClient.post('/upload', formData, {
+            const response = await apiClient.put(`/admin/collections/predefinedthaalis/${id}/image`, formData, {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'multipart/form-data', // Set the content type
                 },
             });
             return response.data;

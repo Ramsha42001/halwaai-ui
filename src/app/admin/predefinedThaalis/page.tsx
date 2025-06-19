@@ -33,7 +33,7 @@ export default function PredefinedThaalis() {
   const [editingThaliId, setEditingThaliId] = useState<string | null>(null);
   const [isThaliFormOpen, setIsThaliFormOpen] = useState(false);
   const [isThaliAddForm, setIsAddThaliForm] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [predefinedThalis, setPredefinedThalis] = useState<PredefinedThali[]>([]);
   const [thaliFormData, setThaliFormData] = useState<Omit<PredefinedThali, '_id'>>({
     name: '',
@@ -75,9 +75,21 @@ export default function PredefinedThaalis() {
       setEditingThaliId(thaliId);
       setIsEditMode(true);
       setIsThaliFormOpen(true);
-      setSelectedImage(thaliToEdit.image)
+      // setSelectedImage(thaliToEdit.image)
     }
   };
+
+  const createPredefinedThali = async () => {
+    const payload = {
+      name: thaliFormData.name,
+      description: thaliFormData.description,
+      price: thaliFormData.price,
+      menuItems: selectedMenuItems
+    };
+
+    const response = await predefinedThaliService.createPredefinedThali(payload);
+    return response;
+  }
 
   const resetForm = () => {
     setThaliFormData({
@@ -145,22 +157,6 @@ export default function PredefinedThaalis() {
     fetchMenuItems();
   }, []);
 
-  const handleMenuItemChange = (item) => {
-    setThaliFormData(prev => ({
-      ...prev,
-      menuItems: [
-        ...prev.menuItems,
-        {
-          name: item.name,
-          image: item.image,
-          price: item.price,
-          description: item.description,
-          quantity: 1
-        }
-      ]
-    }));
-  };
-
   const menuItemsJSON = JSON.stringify(
     thaliFormData.menuItems.map(menuItem => ({
       name: menuItem.name,
@@ -171,32 +167,12 @@ export default function PredefinedThaalis() {
     }))
   );
 
-  console.log('Current menuItems:', thaliFormData.menuItems);
-
   return (
     <div className="min-h-screen pb-[5%] ">
       <div className="flex flex-col sm:flex-col lg:flex-row justify-between items-center sm:items-center lg:items-start mb-8 p-4 md:p-8">
         <h1 className="text-2xl md:text-4xl font-bold text-black "> Special Thalis Preview</h1>
         <Button
-          onClick={() => {
-            setIsAddThaliForm(true);
-
-            // Create FormData object
-            const formData = new FormData();
-            formData.append('name', thaliFormData.name);
-            formData.append('description', thaliFormData.description);
-            formData.append('price', thaliFormData.price.toString());
-
-            if (selectedImage) {
-              formData.append('image', selectedImage);
-            }
-
-            // Append menu items to formData
-            formData.append('menuItemsData', menuItemsJSON);
-
-            // Call createThali with the formData
-            createThali(formData);
-          }}
+          onClick={createPredefinedThali}
           className="mt-4 bg-black hover:bg-gray-800 flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -259,20 +235,13 @@ export default function PredefinedThaalis() {
                 formData.append('description', thaliFormData.description);
                 formData.append('price', thaliFormData.price.toString());
 
-                if (selectedImage) {
-                  formData.append('image', selectedImage);
-                } else {
-                  alert('Please select an image');
-                  return;
-                }
-
                 const menuItemsJSON = JSON.stringify(
                   thaliFormData.menuItems.filter(item => selectedMenuItems.includes(item.item))
                 );
                 formData.append('menuItemsData', menuItemsJSON);
 
                 // Send the payload to create a new thali
-                await predefinedThaliService.createPredefinedThali(formData, selectedImage);
+                await predefinedThaliService.createPredefinedThali(formData);
                 handleCloseAddThaliPopup();
                 fetchPredefinedThalis();
               } catch (error) {
@@ -318,13 +287,13 @@ export default function PredefinedThaalis() {
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label className="text-black">Thali Image</Label>
             <ImageUpload
               value={selectedImage}
               onChange={(file) => setSelectedImage(file)}
             />
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -543,13 +512,13 @@ export default function PredefinedThaalis() {
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label className="text-black">Thali Image</Label>
             <ImageUpload
               value={selectedImage}
               onChange={(file) => setSelectedImage(file)}
             />
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <div className="flex justify-between items-center">
