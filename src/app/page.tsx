@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { Button } from "@/components/ui/button";
 import Hero from "@/components/hero";
 import Header from '@/components/uheader/page'
@@ -131,8 +131,8 @@ const LoginModal = ({ modal, isOpen, onClose }: {
   );
 };
 
-
-export default function Home() {
+// Component that uses useSearchParams
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -296,7 +296,24 @@ export default function Home() {
       >
         <FaWhatsapp className="h-6 w-6" />
       </a>
-
     </>
+  );
+}
+
+// Loading component for Suspense fallback
+function HomeLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function Home() {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeContent />
+    </Suspense>
   );
 }
