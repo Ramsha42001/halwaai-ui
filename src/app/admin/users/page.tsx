@@ -2,8 +2,29 @@
 import React, { useEffect, useState } from 'react';
 import { authService } from '../../../services/api/authService'
 import withAuth, { withAdminAuth } from '@/utils/withAuth';
+
+interface UserAddress {
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode: string;
+    phone: string;
+}
+
+interface User {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    addresses: UserAddress[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 const UserPage: React.FC = () => {
-    const [users, setUsers] = useState<any[]>([]); // Adjust the type as per your user model
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedUserId, setExpandedUserId] = useState<string | null>(null);

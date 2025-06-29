@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/loginForm/page"
 import loginImage from "../../../public/images/loginImage.png"
 import { useEffect, useState } from "react";
 import Header from "@/components/uheader/page";
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
 export default function Home() {
@@ -54,22 +54,25 @@ export default function Home() {
                 window.location.href = '/';
             }
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Firebase login error:", err);
 
             // Handle specific Firebase auth errors
             let errorMessage = "Login failed. Please check your credentials.";
 
-            if (err.code === 'auth/user-not-found') {
-                errorMessage = "No account found with this email address.";
-            } else if (err.code === 'auth/wrong-password') {
-                errorMessage = "Incorrect password.";
-            } else if (err.code === 'auth/invalid-email') {
-                errorMessage = "Invalid email address.";
-            } else if (err.code === 'auth/user-disabled') {
-                errorMessage = "This account has been disabled.";
-            } else if (err.code === 'auth/too-many-requests') {
-                errorMessage = "Too many failed attempts. Please try again later.";
+            if (err && typeof err === 'object' && 'code' in err) {
+                const authError = err as AuthError;
+                if (authError.code === 'auth/user-not-found') {
+                    errorMessage = "No account found with this email address.";
+                } else if (authError.code === 'auth/wrong-password') {
+                    errorMessage = "Incorrect password.";
+                } else if (authError.code === 'auth/invalid-email') {
+                    errorMessage = "Invalid email address.";
+                } else if (authError.code === 'auth/user-disabled') {
+                    errorMessage = "This account has been disabled.";
+                } else if (authError.code === 'auth/too-many-requests') {
+                    errorMessage = "Too many failed attempts. Please try again later.";
+                }
             }
 
             setError(errorMessage);

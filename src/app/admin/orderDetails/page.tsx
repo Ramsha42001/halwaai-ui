@@ -79,9 +79,9 @@ function AdminOrderHistory() {
     const unsubscribe = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val()
       if (data) {
-        const ordersList = Object.entries(data).map(([key, value]: [string, any]) => ({
+        const ordersList = Object.entries(data).map(([key, value]) => ({
           id: key,
-          ...value,
+          ...(value as Omit<Order, 'id'>),
         }))
         // Sort by creation date (newest first)
         ordersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
