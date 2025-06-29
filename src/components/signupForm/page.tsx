@@ -7,39 +7,68 @@ import { FcGoogle } from "react-icons/fc";
 import { useState } from "react";
 import authService from "@/services/api/authService";
 import { useRouter } from 'next/navigation';
-
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '@/lib/firebase';
 
 interface SignupFormProps {
-  onSubmit: (credentials: { firstName: string; lastName: string; email: string; password: string; confirmPassword: string; }) => Promise<void>;
   isLoading: boolean;
 }
 
-
-
-
-
-export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, isLoading }) => {
+export const SignupForm: React.FC<SignupFormProps> = ({ isLoading }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState('');
 
   const router = useRouter();
 
-  const googleSignup = async () => {
+  const handleGoogleSignup = async () => {
     try {
-      window.location.href = 'http://localhost:3000/api/gauth/google';
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const uid = user.uid;
+      console.log(uid);
+      console.log('Google Signup success:', user);
+
+      localStorage.setItem('authToken', user.uid);
+
+      router.push('/'); // redirect to a protected page
     } catch (error) {
-      console.error("Google signup error:", error);
+      console.error('Google signup error:', error);
     }
   };
 
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ firstName, lastName, email, password, confirmPassword });
+    console.log('signing up')
+
+    // Check if passwords match
+    if (password !== confirmPassword) {
+      setMessage("Passwords do not match.");
+      return;
+    }
+
+    console.log("Attempting to sign up with:", { firstName, lastName, email, password });
+
+    try {
+      // Call the onSubmit function to handle any additional logic
+
+      // Proceed with Firebase signup
+      await createUserWithEmailAndPassword(auth, email, password);
+      setMessage('User created successfully!');
+      router.push("/login"); // Redirect after successful signup
+    } catch (error) {
+      console.error("Signup error:", error); // Log the error for debugging
+      if (error instanceof Error) {
+        setMessage(error.message);
+      } else {
+        setMessage('An unknown error occurred.');
+      }
+    }
   };
+
 
   return (
     <div className="w-full max-w-md mx-auto">
@@ -48,7 +77,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, isLoading }) =
         <p className="text-gray-600 mt-2">Signup to order your perfect thali</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSignup} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="firstName">First Name</Label>
@@ -120,12 +149,12 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, isLoading }) =
             variant="outline"
             className="flex-1 flex items-center justify-center gap-2 border-gray-300 bg-white"
             type="button" // Important: Prevent form submission on Google button click
-            onClick={googleSignup}
+            onClick={handleGoogleSignup}
           >
             <FcGoogle className="w-5 h-5" />
             Signup with Google
           </Button>
-          <Button type="submit" className="flex-1 bg-black hover:bg-gray-800" disabled={isLoading}>
+          <Button type="submit" className="flex-1 bg-black hover:bg-gray-800" disabled={isLoading} >
             {isLoading ? "Signing up..." : "Sign up"}
           </Button>
         </div>

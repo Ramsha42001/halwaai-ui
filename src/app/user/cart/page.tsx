@@ -5,69 +5,58 @@ import { ChevronLeft } from 'lucide-react'
 import FoodCard from "@/components/cartCard/page"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { cartService } from "@/services/api/cartService"
-// import { useStore } from '@/services/store/menuItemsStore'
+import { useStore } from '@/services/store/menuItemsStore'
+import withAuth from "@/utils/withAuth"
 
-export default function Cart() {
+function Cart() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [totalPrice, setTotalPrice] = useState(0)
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [orderTotal, setOrderTotal] = useState(0);
-  // const { orderTotal } = useStore();
 
-  interface MenuItem {
-    _id: string
-    name: string
-    description: string
-    imageUrl: string
-    price: number
-    category: {
-      _id: string
-      name: string
-    }
-    hasButter?: boolean
-    quantity: number
-  }
-
-  interface CartItem {
-    _id: string;
-    userId: string;
-    thaaliTitle: string;
-    menuItems: MenuItem[];
-    thaaliTotalPrice: number;
-    thaliquantity: number;
-
-  }
+  // Get cart data and functions from store
+  const { cart, orderTotal, subscribe, unsubscribe, updateCartItemQuantity, removeFromCart } = useStore();
+  const user = localStorage.getItem('authToken')
 
   useEffect(() => {
-    const fetchCartItems = async () => {
-      try {
-        const response = await cartService.getCartItems();
-        setCartItems(response[0].cartItems.cartItems.map((item: CartItem) => ({
-          _id: item._id,
-          userId: item.userId,
-          thaaliTitle: item.thaaliTitle,
-          menuItems: item.menuItems,
-          thaaliTotalPrice: item.thaaliTotalPrice,
-          thaliquantity: item.thaliquantity
-        })));
-        setOrderTotal(response[0].cartItems.totalPrice);
-        console.log(cartItems)
-        console.log('Cart items:', response[0].cartItems);
-      } catch (error) {
-        console.error('Error fetching cart items:', error);
-        setError('Failed to load cart items. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (user) {
+      subscribe(user);
+      setLoading(false);
+      return () => unsubscribe();
+    } else {
+      setLoading(false);
+      setError('User not authenticated');
+    }
+  }, [user, subscribe, unsubscribe]);
 
-    fetchCartItems();
-  }, []);
+  // Transform cart items to match the expected format for FoodCard
+  const transformedCartItems = cart.items.map((item, index) => ({
+    _id: `${item.type}-${index}-${(item.thali as any)._id || index}`,
+    userId: user || '',
+    thaaliTitle: item.thali.name || 'Custom Thali',
+    menuItems: item.thali.menuItems,
+    thaaliTotalPrice: item.thali.thaliPrice,
+    thaliquantity: item.cartQuantity,
+    cartIndex: index // Store index for updating quantity
+  }));
 
+  // Handle quantity update
+  const handleQuantityUpdate = async (cartIndex: number, newQuantity: number) => {
+    try {
+      await updateCartItemQuantity(user, cartIndex, newQuantity);
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      setError('Failed to update quantity');
+    }
+  };
 
-
+  // Handle item removal
+  const handleRemoveItem = async (cartIndex: number) => {
+    try {
+      await removeFromCart(user, cartIndex);
+    } catch (error) {
+      console.error('Error removing item:', error);
+      setError('Failed to remove item');
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen mt-[70px]">
@@ -88,22 +77,45 @@ export default function Cart() {
             <div className="text-red-500 text-center py-4">{error}</div>
           )}
 
-          {!loading && !error && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.isArray(cartItems) && cartItems.map((item, index) => (
-                <FoodCard
-                  key={item._id || index}
-                  id={item._id}
-                  heading={item.thaaliTitle}
-                  thaliquantity={item.thaliquantity}
-                  items={Object.values(item.menuItems).map(menuItem => ({
-                    id: menuItem._id,
-                    name: menuItem.name,
-                    price: menuItem.price,
-                    quantity: menuItem.quantity,
-                  }))}
+          {!loading && !error && cart.items.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">Your cart is empty</p>
+              <Link href="/user">
+                <Button className="bg-black hover:bg-gray-800 text-white">
+                  Continue Shopping
+                </Button>
+              </Link>
+            </div>
+          )}
 
-                />
+          {!loading && !error && cart.items.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {transformedCartItems.map((item) => (
+                <div key={item._id} className="relative">
+                  <FoodCard
+                    id={item._id}
+                    heading={item.thaaliTitle}
+                    thaliquantity={item.thaliquantity}
+                    items={item.menuItems.map(menuItem => ({
+                      id: menuItem._id,
+                      name: menuItem.name,
+                      price: menuItem.price,
+                      quantity: menuItem.quantity,
+                    }))}
+                  />
+
+
+
+                  {/* Show thali type badge */}
+                  <div className="absolute top-2 right-2">
+                    <span className={`px-2 py-1 text-xs rounded ${cart.items[item.cartIndex].type === 'custom'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-green-100 text-green-800'
+                      }`}>
+                      {cart.items[item.cartIndex].type === 'custom' ? 'Custom' : 'Special'}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -118,6 +130,7 @@ export default function Cart() {
           <Link href="/user/address">
             <Button
               className="bg-black hover:bg-gray-800 text-white px-8 py-2 w-full sm:w-auto"
+              disabled={cart.items.length === 0}
             >
               Proceed to checkout
             </Button>
@@ -127,3 +140,5 @@ export default function Cart() {
     </div>
   )
 }
+
+export default withAuth(Cart)

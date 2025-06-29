@@ -20,7 +20,7 @@ export default function PredefinedThali() {
   const [error, setError] = useState<Error | null>(null);
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
 
-  const selectedThali = JSON.parse(localStorage.getItem('selectedThali'));
+  const selectedThali = JSON.parse(localStorage.getItem('selectedThali') || '{}');
   console.log(selectedThali)
 
   const thaliToCart = async () => {
@@ -101,7 +101,7 @@ export default function PredefinedThali() {
             Check out our Pre-defined Thalis
           </h1>
 
-          <div className="mt-16 sm:mt-32 relative">
+          {/* <div className="mt-16 sm:mt-32 relative">
             <Carousel
               opts={{
                 align: "start",
@@ -112,18 +112,18 @@ export default function PredefinedThali() {
               <CarouselContent className="flex justify-center items-center min-w-[100%] h-auto min-h-[90vh]">
                 {
                   predefinedThali?.map((thali, index) => (
-                    <CarouselItem key={thali._id} className="flex justify-center md:basis-1/2 lg:basis-1/3 h-full">
+                    <CarouselItem key={thali._id} className="flex justify-center md:basis-1/2 lg:basis-1/3 h-full ">
                       <ThaliCard
                         key={thali._id}
                         _id={thali._id}
                         title={thali.name}
                         description={thali.description}
                         items={thali.menuItems.map(item => ({
-                          _id: item._id, // Ensure this is the correct property for the ID
+                          _id: item._id,
                           name: item.name,
                           price: item.price,
                           quantity: item.quantity,
-                        }))} // This creates an array of items
+                        }))}
                         image={thali.image}
                         price={thali.price}
                         showButton={false}
@@ -131,20 +131,46 @@ export default function PredefinedThali() {
                     </CarouselItem>
                   ))}
               </CarouselContent>
-              <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-              <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
+              <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md hover:bg-gray-200 transition duration-200" />
+              <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white rounded-full shadow-md hover:bg-gray-200 transition duration-200" />
+            </Carousel>
+          </div> */}
+          <div className="w-[100%] flex justify-center items-center">
+            <Carousel className="w-full max-w-s">
+              <CarouselContent>
+                {predefinedThali.map((thali, index) => (
+                  <CarouselItem key={thali._id} className="flex justify-center md:basis-1/2 lg:basis-1/3 h-full ">
+                    <ThaliCard
+                      key={thali._id}
+                      _id={thali._id}
+                      title={thali.name}
+                      description={thali.description}
+                      items={thali.menuItems.map(item => ({
+                        _id: item._id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                      }))}
+                      image={thali.image}
+                      price={thali.price}
+                      showButton={false}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="hidden md:block" />
+              <CarouselNext className="hidden md:block" />
             </Carousel>
           </div>
-
           <div className="flex justify-center ">
             <Link
               href={localStorage.getItem('authToken') ? '/user/cart' : '/login'}
             >
-              <Button size="lg" className="bg-black text-white hover:bg-black/90"
+              {/* <Button size="lg" className="bg-black text-white hover:bg-black/90"
                 onClick={thaliToCart}
               >
                 Go to Cart
-              </Button>
+              </Button> */}
             </Link>
           </div>
         </div>

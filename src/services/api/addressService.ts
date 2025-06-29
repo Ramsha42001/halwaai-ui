@@ -2,16 +2,17 @@ import { apiClient } from "./config";
 
 export const addressService = {
     getAddress: async () => {
-        const response = await apiClient.get(`/api/addresses/${localStorage.getItem('userId')}`);
+        const userId = localStorage.getItem('authToken')
+        const response = await apiClient.get(`/api/addresses/${userId}`);
         return response.data;
     },
     createAddress: async (address: any) => {
-        const userId = localStorage.getItem('userId');
+        const userId = localStorage.getItem('authToken');
         const payload = {
             userId: userId,
             addressData: address
         }
-        const response = await apiClient.post('/api/addresses',payload);
+        const response = await apiClient.post('/api/addresses', payload);
         return response.data;
     },
     updateAddress: async (address: any) => {

@@ -25,6 +25,8 @@ interface MenuItemProps {
   category?: string;
   isAdminPage: boolean;
   onUpdate?: () => void;
+  onAdd?: () => void;
+  onRemove?: () => void;
   // quantity?: number; 
   requiredCategory?: RequiredCategoryItems[];
   onQuantityChange?: (id: string | undefined, quantity: number) => void;
@@ -48,11 +50,13 @@ export function MenuItemCard({
   onQuantityChange,
   requiredCategory,
   isAdminPage,
-  onUpdate
+  onUpdate,
+  onAdd,
+  onRemove
 }: MenuItemProps) {
 
   const { selectedItems, addItem, removeItem } = useStore();
-  const [quantity, setQuantity] = useState(id ? selectedItems.get(id) || 0 : 0);
+  const [quantity, setQuantity] = useState(0);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
@@ -65,23 +69,12 @@ export function MenuItemCard({
   });
 
   useEffect(() => {
-    if (id)
-      setQuantity(selectedItems.get(id) || 0)
-  }, [selectedItems, id])
+    if (id) {
+      const found = selectedItems.find(i => i._id === id);
+      setQuantity(found ? found.quantity : 0);
+    }
+  }, [selectedItems, id]);
 
-
-  //Functions 
-  const handleItemAddition = () => {
-    if (id && category)
-      addItem(id, category);
-    // calculateThaliProgress();
-  };
-
-  const handleItemRemoval = () => {
-    if (id && category)
-      removeItem(id, category);
-    // calculateThaliProgress();
-  };
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -158,7 +151,7 @@ export function MenuItemCard({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => handleItemRemoval()}
+                onClick={onRemove}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -167,7 +160,7 @@ export function MenuItemCard({
                 variant="ghost"
                 size="icon"
                 className="h-6 w-6"
-                onClick={() => handleItemAddition()}
+                onClick={onAdd}
               >
                 <Plus className="h-4 w-4" />
               </Button>

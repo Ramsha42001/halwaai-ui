@@ -30,25 +30,19 @@ interface Category {
 
 interface SidebarProps {
   menuItems: MenuItem[];
-  requiredCategory: Category[];
 }
 
-export function Sidebar({ menuItems, requiredCategory }: SidebarProps) {
-  const { selectedItems } = useStore();
+export function Sidebar({ menuItems }: SidebarProps) {
 
-  const thaliProgress = JSON.parse(localStorage.getItem('thaliProgress') || '0');
-  console.log(thaliProgress)
-
-
-
-
+  const { thaliProgress } = useStore();
   return (
-    <div className="w-64">
+    <div>
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" className="bg-black text-white hover:bg-black/90">
             <Menu className="mr-2 h-4 w-4" />
-            View Thali Progress
+            <span className="hidden sm:inline">View Thali Progress</span>
+            <span className="sm:hidden">{Math.round(thaliProgress)}%</span>
           </Button>
         </SheetTrigger>
 
@@ -68,15 +62,20 @@ export function Sidebar({ menuItems, requiredCategory }: SidebarProps) {
             <p className="text-md mt-1 text-[white]">{Math.round(thaliProgress)}% Completed</p>
 
             <p className="text-md text-[white] mt-4">Selected Items:</p>
-            <ul className="space-y-4 mt-2">
-              {Array.from(selectedItems.entries()).map(([id, quantity]) => {
-                const item = menuItems.find(item => item._id === id);
-                return (
-                  <li key={id}>
-                    {item ? `${item.name}: Quantity ${quantity}` : `Item ID: ${id}, Quantity: ${quantity}`}
-                  </li>
-                );
-              })}
+            <ul className="space-y-2 mt-2">
+              {menuItems.map(item => (
+                <li key={item._id} className="flex items-center bg-white/80 rounded-lg p-2 shadow-sm">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.name}
+                    className="w-10 h-10 object-cover rounded mr-3 border border-gray-300"
+                  />
+                  <div className="flex-1">
+                    <span className="font-semibold text-black">{item.name}</span>
+                  </div>
+                  <span className="ml-2 text-sm text-gray-700 bg-gray-200 rounded px-2 py-1">x{item.quantity}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </SheetContent>

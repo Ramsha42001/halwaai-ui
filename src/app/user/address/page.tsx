@@ -8,6 +8,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from 'lucide-react';
 import { addressService } from '@/services/api/addressService';
+import withAuth from '@/utils/withAuth';
+import { useStore } from '@/services/store/menuItemsStore'; // Update this import path
+
 
 interface Address {
   firstName: string;
@@ -22,7 +25,7 @@ interface Address {
   zipCode: string;
 }
 
-export default function Address() {
+function Address() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [formData, setFormData] = useState<Address>({
     firstName: '',
@@ -39,11 +42,34 @@ export default function Address() {
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
-const [addressSelect,setAddressSelect] = useState(false);
+  const [addressSelect, setAddressSelect] = useState(false);
+
+  // Get userId from your auth context/hook
+  const userId = localStorage.getItem('authToken') // Update based on your auth implementation
+
+  // Get setSelectedAddress from store
+  const { setSelectedAddress, selectedAddress } = useStore();
+
   const handleSubmit = async () => {
     try {
       await addressService.createAddress(formData);
       console.log('Address created successfully:', formData);
+      // Refresh addresses after creating new one
+      await getAddress();
+      // Reset form and close
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        addressLine1: '',
+        addressLine2: '',
+        city: '',
+        state: '',
+        country: '',
+        zipCode: '',
+      });
+      setOpenForm(false);
     } catch (error) {
       console.error('Error creating address:', error);
     }
@@ -53,7 +79,7 @@ const [addressSelect,setAddressSelect] = useState(false);
     try {
       setLoading(true);
       const response = await addressService.getAddress();
-      setAddresses(response.map((address: Address) => ({
+      const fetchedAddresses = response.map((address: Address) => ({
         firstName: address.firstName,
         lastName: address.lastName,
         email: address.email,
@@ -64,12 +90,35 @@ const [addressSelect,setAddressSelect] = useState(false);
         state: address.state,
         country: address.country,
         zipCode: address.zipCode,
-      })));
+      }));
+      setAddresses(fetchedAddresses);
+
+      // Check if we have a selected address in store and set the index
+      if (selectedAddress) {
+        const index = fetchedAddresses.findIndex((addr: Address) =>
+          addr.addressLine1 === selectedAddress.addressLine1 &&
+          addr.city === selectedAddress.city &&
+          addr.zipCode === selectedAddress.zipCode
+        );
+        if (index !== -1) {
+          setSelectedAddressIndex(index);
+          setAddressSelect(true);
+        }
+      }
     } catch (error) {
       console.error('Error fetching addresses', error);
       setAddresses([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddressSelection = (index: number) => {
+    setSelectedAddressIndex(index);
+    setAddressSelect(true);
+    // Save selected address to store and Firebase
+    if (addresses[index] && userId) {
+      setSelectedAddress(userId, addresses[index]);
     }
   };
 
@@ -111,21 +160,19 @@ const [addressSelect,setAddressSelect] = useState(false);
                   </div>
                 ) : (
                   <div className="mb-8">
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto p-2 border-rounded bg-[white]">
                       {addresses.map((address, index) => (
                         <div
                           key={index}
                           className="flex items-start p-4 border rounded-lg cursor-pointer transition-duration-300 hover:bg-gray-50 border-gray-200 shadow-sm"
-                          onClick={() => setSelectedAddressIndex(index)}
+                          onClick={() => handleAddressSelection(index)}
                         >
                           <input
                             type="radio"
                             name="address"
                             className="mt-1 h-4 w-4 accent-black cursor-pointer"
                             checked={selectedAddressIndex === index}
-                            onChange={() => {setSelectedAddressIndex(index);
-                              setAddressSelect(true);
-                            }}
+                            onChange={() => handleAddressSelection(index)}
                           />
                           <div className="ml-4">
                             <p className="font-medium">{address.firstName} {address.lastName}</p>
@@ -140,30 +187,31 @@ const [addressSelect,setAddressSelect] = useState(false);
                       ))}
                     </div>
 
-                    <div className="mt-4 flex flex-row justify-between">
+                    <div className="m-5 flex flex-col md:flex-row justify-between">
                       {!openForm ? (
                         <>
-                        <button
-                          onClick={() => setOpenForm(true)}
-                          className="w-[250px] py-2 px-4 bg-[black] text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                          </svg>
-                          Add a New Address
-                        </button>
-                        <Link href="/user/payment">
-                    <button 
-                          className="w-[250px] py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
-                        >
-                         Proceed for payment details
-                        </button>
-                        </Link>
+                          <button
+                            onClick={() => setOpenForm(true)}
+                            className="w-[250px] my-[10px] py-2 px-4 bg-[black] text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                            </svg>
+                            Add a New Address
+                          </button>
+                          <Link href="/user/orderTime">
+                            <button
+                              className="w-[250px] py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
+                              disabled={!addressSelect}
+                            >
+                              Next
+                            </button>
+                          </Link>
                         </>
                       ) : (
                         <div className="bg-white p-6 rounded-lg shadow-md">
                           <h3 className="text-xl font-semibold mb-4">Add New Address</h3>
-                          <form className="space-y-4" >
+                          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
@@ -172,6 +220,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.firstName}
                                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                               <div>
@@ -181,6 +230,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.lastName}
                                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                             </div>
@@ -192,6 +242,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                 value={formData.addressLine1}
                                 onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                required
                               />
                             </div>
 
@@ -213,6 +264,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.city}
                                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                               <div>
@@ -222,6 +274,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.state}
                                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                             </div>
@@ -234,6 +287,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.zipCode}
                                   onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                               <div>
@@ -243,6 +297,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.country}
                                   onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                             </div>
@@ -255,6 +310,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.phone}
                                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                               <div>
@@ -264,6 +320,7 @@ const [addressSelect,setAddressSelect] = useState(false);
                                   value={formData.email}
                                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
+                                  required
                                 />
                               </div>
                             </div>
@@ -279,7 +336,6 @@ const [addressSelect,setAddressSelect] = useState(false);
                               <button
                                 type="submit"
                                 className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors duration-300"
-                                onClick={handleSubmit}
                               >
                                 Save Address
                               </button>
@@ -294,8 +350,10 @@ const [addressSelect,setAddressSelect] = useState(false);
             </div>
           </div>
         </div>
-       
+
       </div>
     </>
   );
 }
+
+export default withAuth(Address)

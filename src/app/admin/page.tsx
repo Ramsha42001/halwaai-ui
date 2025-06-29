@@ -9,9 +9,9 @@ import NgoPage from '@/components/contactus/page'
 import Contact from "@/components/contactus/page";
 import Footer from "@/components/footer/page";
 import { useRouter } from "next/navigation";
+import withAuth, { withAdminAuth } from "@/utils/withAuth";
 
-
-export default function MenuPage() {
+function MenuPage() {
   const router = useRouter();
 
   return (
@@ -31,3 +31,5 @@ export default function MenuPage() {
     </div>
   );
 }
+
+export default withAdminAuth(MenuPage)

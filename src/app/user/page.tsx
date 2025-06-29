@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from "@/components/ui/button"
 import { ChevronRight } from 'lucide-react'
 import { MenuItemCard } from '@/components/menuItemCard/page'
@@ -11,6 +11,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/services/store/menuItemsStore'
 import categoryService from '@/services/api/categoryService'
+import withAuth from '@/utils/withAuth';
+
 
 interface MenuItem {
   _id: string
@@ -39,22 +41,33 @@ interface RequiredCategoryItems {
 
 
 
-export default function MenuPage() {
+function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('')
-  const { selectedItems, addItem, removeItem } = useStore();
-  const router = useRouter()
+  const { selectedItems, orderTotal, thaliProgress, loading, error, requiredCategories, subscribe, unsubscribe, addItem, removeItem } = useStore();
+  const router = useRouter();
   const [category, setCategory] = useState<Category[]>([]);
-  const [requiredCategoryItems, setRequiredCategoryItems] = useState<RequiredCategoryItems[]>(() => {
-    const storedItems = localStorage.getItem('requiredCategoryItems');
-    return storedItems ? JSON.parse(storedItems) : []; // Default to an empty array if null
-  });
+
+  const user = localStorage.getItem('authToken')
+
 
   useEffect(() => {
     menuItemService.getMenuItems().then((response) => {
       setMenuItems(response)
     })
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      subscribe(user);
+      return () => unsubscribe();
+    }
+
+  }, [user, subscribe, unsubscribe]);
+
+  console.log('requiredCategories', requiredCategories)
+  console.log(thaliProgress)
+
 
   useEffect(() => {
     categoryService.getCategories().then((response) => {
@@ -66,29 +79,26 @@ export default function MenuPage() {
         _id: item._id,
         selectedForThali: false
       }));
-      setRequiredCategoryItems(initialRequiredCategories);
-      localStorage.setItem('requiredCategoryItems', JSON.stringify(initialRequiredCategories)); // Save to local storage
+      useStore.getState().setRequiredCategories(initialRequiredCategories);
     });
   }, []);
-
-  useEffect(() => {
-    // Save requiredCategoryItems to local storage whenever it changes
-    localStorage.setItem('requiredCategoryItems', JSON.stringify(requiredCategoryItems));
-  }, [requiredCategoryItems]);
-
-  console.log(requiredCategoryItems)
 
   const filteredMenuItems = selectedCategory
     ? menuItems.filter(item => item.category && item.category._id === selectedCategory)
     : menuItems
 
+  // Memoize the category selection callback
+  const handleCategorySelect = useCallback((category: string) => {
+    setSelectedCategory(category);
+  }, []);
+
   return (
     <div className="flex min-h-[100vh] h-auto bg-foreground flex-col text-[black] mt-[70px] pb-[20%] md:pb-[5%]">
-      <MenuBar onCategorySelect={(category) => {
-        setSelectedCategory(category);
-      }} />
-      <div className="flex flex-1 md:flex-row flex-col mt-[20px] ml-[5px]">
-        <Sidebar menuItems={menuItems} requiredCategory={requiredCategoryItems} />
+      <MenuBar onCategorySelect={handleCategorySelect} />
+      <div className="flex flex-1 md:flex-row flex-col mt-[80px] ml-[5px]">
+        <div className='hidden md:block'>
+          <Sidebar menuItems={selectedItems} />
+        </div>
         <div className="flex-1 p-4">
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
@@ -106,7 +116,9 @@ export default function MenuPage() {
                   image={item.imageUrl}
                   price={item.price}
                   category={selectedCategory}
-                  requiredCategory={requiredCategoryItems}
+                  isAdminPage={false}
+                  onAdd={() => addItem(user, item)}
+                  onRemove={() => removeItem(user, item)}
                 />
               ))}
             </div>
@@ -116,12 +128,12 @@ export default function MenuPage() {
                   pathname: '/user/thali',
                 }}
               >
-                <Button
+                {/* <Button
                   className="bg-black text-white hover:bg-black/90"
                 >
                   Next
                   <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
+                </Button> */}
               </Link>
             </div>
           </div>
@@ -130,3 +142,5 @@ export default function MenuPage() {
     </div>
   )
 }
+
+export default withAuth(MenuPage);

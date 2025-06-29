@@ -6,32 +6,36 @@ import { Eye, Pencil } from "lucide-react";
 import { ModalConfig } from "@/app/types/modal";
 import { useState } from "react";
 import { CustomPopup } from "@/components/popup";
-import modalService from "@/services/api/modalService"; 
+import modalService from "@/services/api/modalService";
 import { EditModalForm } from "./editModal";
+import { color } from "framer-motion";
 
 export default function ModalCard({
-  _id, // Assuming there's an id for the modal to update
+  _id,
   title,
   description,
   showOnLoad,
   delay,
-  buttonText,
+  ButtonText,
 }: ModalConfig) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editData, setEditData] = useState<ModalConfig>({ 
-    _id, 
-    title, 
-    description, 
-    showOnLoad, 
-    delay, 
-    buttonText 
+  const [editData, setEditData] = useState<ModalConfig>({
+    _id,
+    title,
+    description,
+    showOnLoad,
+    delay,
+    ButtonText
   });
+
+
 
   const handleEditSubmit = async (updatedData: Partial<ModalConfig>) => {
     try {
-      await modalService.updateModal(editData._id, updatedData);
+      await modalService.updateModal(updatedData);
       setIsEditOpen(false);
+      window.location.reload();
     } catch (error: unknown) {
       console.error('Error updating modal:', error);
       if (error && typeof error === 'object' && 'response' in error) {
@@ -56,27 +60,27 @@ export default function ModalCard({
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Button Text:</span>
-            <span className="font-medium">{buttonText}</span>
+            <span className="font-medium">{ButtonText}</span>
           </div>
         </div>
       </CardContent>
       <CardFooter className="justify-end space-x-2">
-        <Button onClick={() => setIsPreviewOpen(true)} variant="outline" size="sm">
+        <Button onClick={() => setIsPreviewOpen(true)} variant="outline" size="sm" style={{ backgroundColor: 'transparent', color: 'black' }}>
           <Eye className="w-4 h-4 mr-2" />
           Preview
         </Button>
 
         <Button onClick={() => {
-          setEditData({ 
-            _id, 
-            title, 
-            description, 
-            showOnLoad, 
-            delay, 
-            buttonText 
-          }); 
+          setEditData({
+            _id,
+            title,
+            description,
+            showOnLoad,
+            delay,
+            ButtonText
+          });
           setIsEditOpen(true);
-        }} variant="outline" size="sm">
+        }} variant="outline" size="sm" style={{ backgroundColor: 'black', color: 'white' }}>
           <Pencil className="w-4 h-4 mr-2" />
           Edit
         </Button>
@@ -87,10 +91,10 @@ export default function ModalCard({
           showCloseButton={false}
           className="bg-[#fff5f5] text-black"
         >
-          <EditModalForm 
+          <EditModalForm
             data={editData}
             onClose={() => setIsEditOpen(false)}
-            onSubmit={handleEditSubmit} 
+            onSubmit={handleEditSubmit}
           />
         </CustomPopup>
         <CustomPopup
@@ -113,7 +117,7 @@ export default function ModalCard({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Button Text:</span>
-              <span className="font-medium">{buttonText}</span>
+              <span className="font-medium">{ButtonText}</span>
             </div>
           </div>
         </CustomPopup>

@@ -3,15 +3,26 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Utensils, ChefHat, ClipboardList, User, LogOut } from 'lucide-react'
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function BottomNav() {
   const pathname = usePathname()
   const hiddenRoutes = ['/login', '/signup']
-  
+
   if (hiddenRoutes.includes(pathname)) return null
 
   // Check if we are on a user-specific route
   const isUserRoute = pathname.startsWith('/user')
+
+  const user = localStorage.getItem('authToken')
+
+  const handleLogout = async () => {
+    localStorage.removeItem('authToken');
+    await signOut(getAuth());
+    localStorage.removeItem('userId');
+    localStorage.removeItem('username');
+    window.location.href = '/login';
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black text-white z-50 md:hidden">
@@ -19,77 +30,78 @@ export default function BottomNav() {
         {/* Only show these links if not on user routes */}
         {!isUserRoute && (
           <>
-            <Link 
+            <Link
               href="#predefined"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/predefined-thalis' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/predefined-thalis' ? 'text-primary' : 'text-white'
+                }`}
             >
               <Utensils className="h-6 w-6" />
-              <span className="text-xs text-center">Predefined Thalis</span>
+              <span className="text-xs text-center">Special Thalis</span>
             </Link>
 
-            <Link 
+            <Link
               href="/user"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/customize-thali' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/customize-thali' ? 'text-primary' : 'text-white'
+                }`}
             >
               <ChefHat className="h-6 w-6" />
-              <span className="text-xs text-center">Customize Thali</span>
+              <span className="text-xs text-center">Create Thali</span>
             </Link>
 
-            <Link 
+            {!user ? <><Link
               href="/login"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/orders' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/orders' ? 'text-primary' : 'text-white'
+                }`}
             >
               <ClipboardList className="h-6 w-6" />
               <span className="text-xs text-center">Login</span>
-            </Link>
+            </Link></> : <><Link
+              href="/login"
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/orders' ? 'text-primary' : 'text-white'
+                }`}
+              onClick={handleLogout}
+            >
+              <ClipboardList className="h-6 w-6" />
+              <span className="text-xs text-center">Logout</span>
+            </Link></>}
           </>
         )}
 
         {/* Show these links if on /user route */}
         {isUserRoute && (
           <>
-            <Link 
-              href="#predefined"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/user/predefined-thalis' ? 'text-primary' : 'text-white'
-              }`}
+            <Link
+              href="/"
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/user/predefined-thalis' ? 'text-primary' : 'text-white'
+                }`}
             >
               <Utensils className="h-6 w-6" />
-              <span className="text-xs text-center">Predefined Thalis</span>
+              <span className="text-xs text-center">Special Thalis</span>
             </Link>
 
-            <Link 
+            <Link
               href="/user"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/user/customize-thali' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/user/customize-thali' ? 'text-primary' : 'text-white'
+                }`}
             >
               <ChefHat className="h-6 w-6" />
               <span className="text-xs text-center">Customize Thali</span>
             </Link>
 
-            <Link 
+            <Link
               href="/user/history"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/user/orders' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/user/orders' ? 'text-primary' : 'text-white'
+                }`}
             >
               <ClipboardList className="h-6 w-6" />
               <span className="text-xs text-center">Your Orders</span>
             </Link>
 
             {/* Add a Logout button */}
-            <Link 
+            <Link
               href="/"
-              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${
-                pathname === '/logout' ? 'text-primary' : 'text-white'
-              }`}
+              className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/logout' ? 'text-primary' : 'text-white'
+                }`}
             >
               <LogOut className="h-6 w-6" />
               <span className="text-xs text-center">Logout</span>

@@ -6,8 +6,9 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { menuItems } from "@/data/menu-items";
-import { cartService } from "@/services/api/cartService";
+import { useStore } from '@/services/store/menuItemsStore';
 import predefinedThaliService from "@/services/api/predefinedThaliService";
+
 interface MenuItem {
   _id: string;
   name: string;
@@ -42,29 +43,21 @@ export function ThaliCard({
   const [quantity, setQuantity] = useState(0);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const selectedThali = JSON.parse(localStorage.getItem('selectedThali') || '{}');
+  const { addSpecialThaliToCart, cart } = useStore();
 
+  // Check if this thali is already in cart and get its quantity
   useEffect(() => {
-    const selectedThaliString = localStorage.getItem('selectedThali');
-    if (selectedThaliString) {
-      const selectedThali = JSON.parse(selectedThaliString);
-      setQuantity(selectedThali.quantity || 0);
+    if (_id && cart) {
+      const existingItem = cart.items.find(
+        item => item.type === 'special' && (item.thali as any)._id === _id
+      );
+      if (existingItem) {
+        setQuantity(existingItem.cartQuantity);
+      }
     }
-  }, []);
-
-  const handlePredefinedThaliItem = (thaliData: any) => {
-    setQuantity(quantity + 1);
-    localStorage.setItem('selectedThali', JSON.stringify({
-      _id: thaliData._id,
-      title: thaliData.title,
-      description: thaliData.description,
-      items: thaliData.items,
-      image: thaliData.image,
-      price: thaliData.price,
-      quantity: quantity + 1
-    }));
-  }
+  }, [_id, cart]);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -99,58 +92,87 @@ export function ThaliCard({
     setSelectedImage(null);
   };
 
-  const thaliToCart = async () => {
-    const payload = {
-      thaliTitle: selectedThali.title,
-      menuItems: selectedThali.items.map((item: any) => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      })),
-      thaaliTotalPrice: selectedThali.price,
-      thaliquantity: selectedThali.quantity
+  const handleAddThaliToCart = async () => {
+    if (!_id) {
+      console.error('Thali ID is required');
+      return;
     }
 
-    console.log(payload);
-    await cartService.addToCart(payload);
-  }
+    setIsAddingToCart(true);
+    try {
+      const userId = localStorage.getItem('authToken');
 
-  const increaseQuantity = () => {
-    setQuantity(quantity + 1);
+      // Create special thali object
+      const specialThali = {
+        _id,
+        name: title,
+        menuItems: items.map(item => ({
+          ...item,
+          description: '',
+          imageUrl: '',
+          category: { _id: '', name: '' },
+          hasButter: false
+        })),
+        thaliPrice: price,
+        thaliQuantity: items.reduce((sum, item) => sum + item.quantity, 0)
+      };
 
-    const selectedThaliString = localStorage.getItem('selectedThali');
-    if (selectedThaliString) {
-      const selectedThali = JSON.parse(selectedThaliString);
-      selectedThali.quantity += 1;
-      localStorage.setItem('selectedThali', JSON.stringify(selectedThali));
+      // Add to cart using store function
+      await addSpecialThaliToCart(userId, specialThali);
+
+      // Update local quantity
+      setQuantity(quantity + 1);
+
+      alert('Thali added to cart successfully!');
+    } catch (error) {
+      console.error('Error adding thali to cart:', error);
+      alert('Failed to add thali to cart');
+    } finally {
+      setIsAddingToCart(false);
     }
-  }
+  };
 
-  const decreaseQuantity = () => {
-    if (quantity > 0) {
-      setQuantity(quantity - 1);
+  const increaseQuantity = async () => {
+    await handleAddThaliToCart();
+  };
 
-      const selectedThaliString = localStorage.getItem('selectedThali');
-      if (selectedThaliString) {
-        const selectedThali = JSON.parse(selectedThaliString);
-        selectedThali.quantity = Math.max(0, selectedThali.quantity - 1);
-        localStorage.setItem('selectedThali', JSON.stringify(selectedThali));
+  const decreaseQuantity = async () => {
+    if (quantity > 0 && _id) {
+      try {
+        const userId = localStorage.getItem('authToken');
+        const { cart, updateCartItemQuantity } = useStore.getState();
+
+        // Find the cart item index
+        const itemIndex = cart.items.findIndex(
+          item => item.type === 'special' && (item.thali as any)._id === _id
+        );
+
+        if (itemIndex !== -1) {
+          // Update quantity in cart
+          await updateCartItemQuantity(userId, itemIndex, cart.items[itemIndex].cartQuantity - 1);
+          setQuantity(quantity - 1);
+        }
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+        alert('Failed to update quantity');
       }
     }
-  }
+  };
 
   return (
     <>
-      <div className="relative w-[400px] min-h-[500px] h-auto mx-[20px]">
-        <div className="absolute overflow-hidden w-[300px] h-[300px] bg-[white] border-[2px] border-[black] mx-[50px] rounded-full">
-          <img src={image} alt={image} className="object-cover w-[100%] h-[100%]" />
-          <div onClick={openDialog} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-300">
-            <span className="text-white">Upload Image</span>
-          </div>
+      <div className="relative w-[350px] min-h-[500px] h-auto ">
+        <div className="relative w-[250px] h-[250px] mx-auto my-0 bg-[white] rounded-full z-10">
+          <img src={image} alt={image} className="object-cover w-[100%] h-[100%] rounded-full" />
+          {showButton && (
+            <div onClick={openDialog} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-300 border-rounded rounded-[100%]">
+              <span className="text-white">Upload Image</span>
+            </div>
+          )}
         </div>
 
-        <Card className="bg-[#997864] text-white border-none min-h-[350px] h-auto mt-[150px] pb-[5%]">
-          <CardHeader className="pt-[170px] flex flex-row justify-between items-start">
+        <Card style={{ height: `calc(100% - 125px)`, width: '100%', paddingTop: '130px', paddingLeft: '10px', paddingRight: '10px', paddingBottom: '10px' }} className="absolute bottom-0 left-0 bg-[#997864] text-white border-none h-auto">
+          <CardHeader className="flex flex-row justify-between items-start">
             <h2 className="text-2xl font-semibold">{title}</h2>
             <p className="text-sm opacity-90">₹{price}</p>
           </CardHeader>
@@ -163,7 +185,7 @@ export function ThaliCard({
             ))}
           </CardContent>
           {showButton && quantity <= 0 ? (
-            <><div className="flex flex-row justify-right mx-[10px]">
+            <div className="flex flex-row justify-right mx-[10px]">
               <Button
                 className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
                 onClick={onClick}
@@ -176,51 +198,47 @@ export function ThaliCard({
               >
                 Delete Thali
               </Button>
-            </div></>
-          ) : quantity <= 0 ? (
-            <Button
-              className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
-              onClick={() => {
-                handlePredefinedThaliItem({
-                  _id,
-                  title,
-                  description,
-                  items,
-                  image,
-                  price
-                });
-                thaliToCart();
-              }}
-            >
-              Add Thali
-            </Button>
-          ) : <div className="absolute bottom-2 left-2 flex items-center">
-            <Button
-              className="bg-black hover:bg-gray-800 text-white"
-              onClick={increaseQuantity}
-            >
-              +
-            </Button>
-            <span className="mx-2 text-white">{quantity}</span>
-            <Button
-              className="bg-black hover:bg-gray-800 text-white"
-              onClick={decreaseQuantity}
-            >
-              -
-            </Button>
-          </div>}
+            </div>
+          ) : quantity == 0 ? (
+            <div className="absolute bottom-2 right-2 flex items-center">
+              <Button
+                className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
+                onClick={handleAddThaliToCart}
+                disabled={isAddingToCart}
+              >
+                {isAddingToCart ? 'Adding...' : 'Add Thali'}
+              </Button>
+            </div>
+          ) : (
+            <div className="absolute bottom-2 right-2 flex items-center">
+              <Button
+                className="bg-black hover:bg-gray-800 text-white"
+                onClick={increaseQuantity}
+                disabled={isAddingToCart}
+              >
+                +
+              </Button>
+              <span className="mx-2 text-white">{quantity}</span>
+              <Button
+                className="bg-black hover:bg-gray-800 text-white"
+                onClick={decreaseQuantity}
+              >
+                -
+              </Button>
+            </div>
+          )}
         </Card>
       </div>
 
       {isDialogOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]">
           <div className="bg-white p-4 rounded">
-            <h2 className="text-lg font-semibold">Upload Image</h2>
+            <h2 className="text-lg font-semibold text-black">Upload or update Image</h2>
             <input
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="mt-2"
+              className="mt-2 text-black"
             />
             <div className="flex justify-end mt-4">
               <Button onClick={handleImageUpload} className="bg-blue-500 text-white">

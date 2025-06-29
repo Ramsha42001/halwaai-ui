@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/image-upload";
 import { useState, useEffect } from "react";
+import withAuth, { withAdminAuth } from "@/utils/withAuth";
 import SubHeader from "@/components/sub-header";
 import {
   Select,
@@ -40,7 +41,7 @@ interface MenuItem {
   hasButter?: boolean;
 }
 
-export default function MenuPage() {
+function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -163,7 +164,7 @@ export default function MenuPage() {
     <div className="min-h-screen bg-[#fff5f5] text-[black] flex-column pb-[5%]">
       {/* <div className="hidden lg:block"><SubHeader /></div> */}
 
-      <main className="p-4 md:p-8 ">
+      <main className="p-4 md:p-8 pt-[80px]">
         <div className="flex justify-between items-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-4xl font-bold">Menu Items</h1>
           <div className="flex gap-4">
@@ -344,6 +345,7 @@ export default function MenuPage() {
                   onUpdate={refreshMenuItems}
                   category={selectedCategory}
                   isAdminPage={true}
+
                 />
               </div>
             ))
@@ -362,3 +364,5 @@ export default function MenuPage() {
     </div>
   );
 }
+
+export default withAdminAuth(MenuPage)

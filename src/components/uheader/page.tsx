@@ -11,23 +11,27 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from 'lucide-react';
 import { ChevronDown } from "lucide-react";
+import { useAuthStore } from "@/services/store/authStore";
+import { getAuth, signOut } from 'firebase/auth';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to control dropdown visibility
   const pathname = usePathname(); // Get current route
+  const auth = useAuthStore();
 
   // Check if the current route is either /login, /signup, /user, or /admin
-  const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/user" || pathname === "/admin" || pathname==='/user/thali' || pathname==='/user/address' || pathname==='/user/history' || pathname==='/user/cart' || pathname==='/admin/modalManagement' || pathname==='/admin/predefinedThaalis' || pathname==='/admin/menuItems';
+  const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/user" || pathname === "/admin" || pathname === '/user/thali' || pathname === '/user/address' || pathname === '/user/history' || pathname === '/user/cart' || pathname === '/admin/modalManagement' || pathname === '/admin/predefinedThaalis' || pathname === '/admin/menuItems' || pathname === '/admin/users';
 
   // Conditionally render the user icon dropdown on /user or /admin routes
-  const showUserDropdown = pathname === "/user" || pathname === "/admin" || pathname==='/user/thali' || pathname==='/user/address' || pathname==='/user/history' || pathname==='/user/cart' || pathname==='/admin/modalManagement' || pathname==='/admin/predefinedThaalis' || pathname==='/admin/menuItems';
+  const showUserDropdown = pathname === "/user" || pathname === "/admin" || pathname === '/user/thali' || pathname === '/user/address' || pathname === '/user/history' || pathname === '/user/cart' || pathname === '/admin/modalManagement' || pathname === '/admin/predefinedThaalis' || pathname === '/admin/menuItems' || pathname === '/admin/users';
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('authToken');
+    await signOut(getAuth());
     localStorage.removeItem('userId');
     localStorage.removeItem('username');
-    window.location.href = '/'; // Redirect to home page
+    window.location.href = '/login';
   };
 
   return (
@@ -41,7 +45,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation Links - Centered */}
-        {!isAuthPage && (
+        {/* {!isAuthPage && (
           <NavigationMenu className="hidden lg:flex flex-1 justify-center">
             <NavigationMenuList className="flex space-x-6">
               <NavigationMenuItem>
@@ -70,10 +74,10 @@ export default function Header() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
-        )}
+        )} */}
 
         {/* Hamburger Menu for Mobile */}
-        {!showUserDropdown && (
+        {/* {!showUserDropdown && (
           <button
             className="lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -85,7 +89,7 @@ export default function Header() {
               <Menu className="h-6 w-6" />
             )}
           </button>
-        )}
+        )} */}
 
         {/* Mobile Navigation Menu */}
         <NavigationMenu className={`lg:hidden ${isMenuOpen ? 'flex' : 'hidden'} flex-col absolute top-16 right-[10px] w-full bg-black z-[50]`}>
@@ -179,7 +183,7 @@ export default function Header() {
                     </Link>
                   </li>
                   <li>
-                    <button 
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 hover:bg-gray-700"
                     >

@@ -7,14 +7,14 @@ const modalService = {
     },
 
     createModal: async (modalData: any) => {
-       
+
         const response = await apiClient.post('/admin/collection/modals', modalData);
         return response.data;
     },
 
-    updateModal: async (modalId: string, updatedData: any) => {
+    updateModal: async (updatedData: any) => {
         console.log('Updating modal with data:', updatedData);
-        const response = await apiClient.put(`/admin/modals/${modalId}`, updatedData, {
+        const response = await apiClient.put(`/admin/collection/modals/${updatedData._id}`, updatedData, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
             },
@@ -25,8 +25,8 @@ const modalService = {
     deleteModal: async (modalId: string) => {
         const response = await apiClient.delete(`/admin/modals/${modalId}`);
         return response.data;
-    }   
-    
+    }
+
 }
 
 export default modalService;

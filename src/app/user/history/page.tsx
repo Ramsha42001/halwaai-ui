@@ -1,6 +1,6 @@
 'use client'
 
-import { useState,useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeft, MoreVertical, Download, Phone, Menu } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,9 +19,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { orders } from '@/app/data/orders'
 import Link from 'next/link'
-import {orderHistoryService} from '@/services/api/orderHistoryService';
+import { useRouter } from 'next/navigation'
+import { orderHistoryService } from '@/services/api/orderHistoryService';
+import { useStore } from '@/services/store/menuItemsStore'
+import withAuth from '@/utils/withAuth'
 
 interface OrderHistory {
   orderId: string;
@@ -41,44 +43,225 @@ interface OrderHistory {
   totalPrice: number;
 }
 
-export default function History() {
+function History() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState('all')
   const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([])
   const [loading, setLoading] = useState(true)
+  const [placingOrder, setPlacingOrder] = useState(false)
+
+  const {
+    subscribe,
+    unsubscribe,
+    cart,
+    orderTotal,
+    selectedAddress,
+    deliverySchedule,
+    orderStatus,
+    changeOrderStatus,
+    placeOrder,
+    clearAllUserData
+  } = useStore();
+
+  const user = localStorage.getItem('authToken')
+
+  useEffect(() => {
+    if (user) {
+      subscribe(user);
+      return () => unsubscribe();
+    }
+  }, [user, subscribe, unsubscribe]);
 
   useEffect(() => {
     const fetchOrderHistory = async () => {
       try {
-        const userId = localStorage.getItem('userId')
+        setLoading(true);
+
+        const userId = localStorage.getItem('authToken')
         if (!userId) {
           console.error('No user ID found')
+          alert("Authentication Required: Please log in to view your order history.");
           return
         }
 
         const response = await orderHistoryService.getOrderHistoryUser(userId)
-        console.log('response:',response)
+        console.log('response:', response)
         if (response) {
           setOrderHistory(response)
         }
       } catch (error) {
         console.error('Error fetching order history:', error)
+        alert("Failed to Load Orders: Unable to fetch your order history. Please refresh the page.");
       } finally {
         setLoading(false)
       }
     }
 
     fetchOrderHistory()
-  }, []) 
+  }, [])
+
+  const handlePlaceOrder = async () => {
+    try {
+      setPlacingOrder(true);
+
+      // Check if cart is empty
+      if (!cart || cart.items.length === 0) {
+        alert("Empty Cart: Please add items to your cart before placing an order.");
+        return;
+      }
+
+      // Validate required data
+      if (!selectedAddress || !deliverySchedule) {
+        alert("Missing Information: Please ensure you have selected an address and delivery schedule.");
+        return;
+      }
+
+      // Show processing message
+      alert("Processing Order: Your order is being processed...");
+
+      // Change status to processing
+      await changeOrderStatus(user, 'processing');
+
+      // Place the order
+      const orderId = await placeOrder(user);
+
+      if (orderId) {
+        // Order placed successfully
+        await clearAllUserData(user);
+
+        // Show success message
+        alert(`Order Placed Successfully! Your order #${orderId} has been placed and will be delivered as scheduled.`);
+        localStorage.setItem('lastOrderId', orderId);
+        router.push('/user/orderSummary');
+        // Refresh the page to show updated order history
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        // Handle error
+        alert("Order Failed: Failed to place order. Please try again.");
+
+        await changeOrderStatus(user, 'pending');
+      }
+    } catch (error) {
+      console.error('Error placing order:', error);
+      alert("Error: An unexpected error occurred. Please try again.");
+      await changeOrderStatus(user, 'pending');
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
+
+  const handleClearCart = async () => {
+    try {
+      await clearAllUserData(user);
+      alert("Cart Cleared: All items have been removed from your cart.");
+      // Refresh to update the UI
+      window.location.reload();
+    } catch (error) {
+      alert("Error: Failed to clear cart. Please try again.");
+    }
+  };
+
+  const handleContactOwner = (orderId: string) => {
+    alert("Contact Support: Redirecting to customer support for assistance...");
+    // Add your contact logic here
+    // For now, just show the alert
+  };
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    try {
+      alert("Preparing Download: Your invoice is being generated...");
+
+      // Add your download logic here
+      // await downloadInvoice(orderId);
+
+      // Simulate download delay
+      setTimeout(() => {
+        alert("Download Complete: Invoice has been downloaded successfully.");
+      }, 2000);
+    } catch (error) {
+      alert("Download Failed: Unable to download invoice. Please try again.");
+    }
+  };
+
+  // Helper function to get badge variant based on status
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'secondary'
+      case 'active':
+      case 'processing':
+        return 'default'
+      case 'completed':
+        return 'outline'
+      case 'cancelled':
+        return 'destructive'
+      default:
+        return 'secondary'
+    }
+  }
+
+  // Helper function to get badge color classes
+  const getStatusBadgeClasses = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-200 text-yellow-800'
+      case 'active':
+      case 'processing':
+        return 'bg-blue-200 text-blue-800'
+      case 'completed':
+        return 'bg-green-200 text-green-800'
+      case 'cancelled':
+        return 'bg-red-200 text-red-800'
+      default:
+        return 'bg-gray-200 text-gray-800'
+    }
+  }
+
+  const filteredOrders = orderHistory.filter(order => {
+    const matchesSearch = searchQuery === '' ||
+      order.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.customerDetails.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesTab = activeTab === 'all' || order.status.toLowerCase() === activeTab;
+
+    return matchesSearch && matchesTab;
+  });
+
+  // Generate a mock order ID for current cart (you can replace this with actual order ID generation)
+  const currentOrderId = `ORD-${Date.now()}`;
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
+        <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b text-[black] z-30">
+          <div className="flex items-center gap-4">
+            <Link href="/user/address">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <h1 className="text-xl md:text-2xl font-semibold">Order Summary</h1>
+          </div>
+        </div>
+        <div className="mt-[100px] flex justify-center">
+          <p className="text-muted-foreground">Loading your order summary...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
       <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b text-[black] z-30">
         <div className="flex items-center gap-4">
           <Link href="/user/address">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
           </Link>
           <h1 className="text-xl md:text-2xl font-semibold">Order History</h1>
         </div>
@@ -101,28 +284,28 @@ export default function History() {
             </SheetTrigger>
             <SheetContent side="right" className="w-[200px] sm:w-[300px]">
               <div className="flex flex-col gap-4 mt-6">
-                <Button 
+                <Button
                   variant={activeTab === 'all' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('all')}
                   className="w-full justify-start bg-opacity-40"
                 >
                   All Orders
                 </Button>
-                <Button 
+                <Button
                   variant={activeTab === 'active' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('active')}
                   className="w-full justify-start bg-opacity-40"
                 >
                   Active
                 </Button>
-                <Button 
+                <Button
                   variant={activeTab === 'completed' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('completed')}
                   className="w-full justify-start bg-opacity-40"
                 >
                   Completed
                 </Button>
-                <Button 
+                <Button
                   variant={activeTab === 'cancelled' ? 'default' : 'ghost'}
                   onClick={() => setActiveTab('cancelled')}
                   className="w-full justify-start bg-opacity-40"
@@ -154,18 +337,25 @@ export default function History() {
         </Tabs>
 
         <div className="space-y-4">
-          {orders.map((order) => (
-            <Card key={order.id} className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between p-4">
+          {/* Show current cart as pending order if there are items */}
+          {cart && cart.items.length > 0 && (
+            <Card className="overflow-hidden border-2 border-yellow-500">
+              <CardHeader className="flex flex-row items-center justify-between p-4 bg-yellow-50">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">#{order.id}</span>
-                    <Badge variant={order.status === 'pending' ? 'secondary' : 'default'} className="bg-[black] text-[white]">
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    <span className="font-semibold">#{currentOrderId}</span>
+                    <Badge
+                      variant={getStatusBadgeVariant(orderStatus)}
+                      className={getStatusBadgeClasses(orderStatus)}
+                    >
+                      {orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Placed on {order.date} at {order.time}
+                    {deliverySchedule ?
+                      `Delivery by ${deliverySchedule.dateLabel} at ${deliverySchedule.timeLabel}` :
+                      'Delivery schedule not set'
+                    }
                   </p>
                 </div>
                 <DropdownMenu>
@@ -175,30 +365,41 @@ export default function History() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Contact Owner</DropdownMenuItem>
-                    <DropdownMenuItem>Download Invoice</DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/user/cart">Edit Cart</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleClearCart}>
+                      Clear Cart
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </CardHeader>
               <CardContent className="p-4">
                 <div className="grid gap-6">
-                  <div className="grid gap-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="font-semibold mb-2">Customer Details</h3>
-                        <div className="space-y-1 text-sm">
-                          <p>{order.customer.name}</p>
-                          <p className="flex items-center gap-1">
-                            <Phone className="h-3 w-3" />
-                            {order.customer.phone}
-                          </p>
-                          <p className="text-muted-foreground">{order.customer.email}</p>
-                        </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Customer Details</h3>
+                      <div className="space-y-1 text-sm">
+                        <p>{selectedAddress ? `${selectedAddress.firstName} ${selectedAddress.lastName}` : 'Not set'}</p>
+                        <p className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {selectedAddress?.phone || 'Not set'}
+                        </p>
+                        <p className="text-muted-foreground">{selectedAddress?.email || 'Not set'}</p>
                       </div>
-                      <div>
-                        <h3 className="font-semibold mb-2">Delivery Address</h3>
-                        <p className="text-sm">{order.deliveryAddress}</p>
-                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Delivery Address</h3>
+                      {selectedAddress ? (
+                        <>
+                          <p className="text-sm">{selectedAddress.addressLine1}</p>
+                          {selectedAddress.addressLine2 && <p className="text-sm">{selectedAddress.addressLine2}</p>}
+                          <p className="text-sm">{`${selectedAddress.city} ${selectedAddress.zipCode}`}</p>
+                          <p className="text-sm">{`${selectedAddress.state}, ${selectedAddress.country}`}</p>
+                        </>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">Address not set</p>
+                      )}
                     </div>
                   </div>
 
@@ -207,43 +408,53 @@ export default function History() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Subtotal:</span>
-                        <span>₹{order.subtotal}</span>
+                        <span>₹{orderTotal}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Delivery Fee:</span>
-                        <span>₹{order.deliveryFee}</span>
+                        <span>₹0</span>
                       </div>
                       <div className="flex justify-between font-semibold border-t pt-2">
                         <span>Total:</span>
-                        <span>₹{order.total}</span>
+                        <span>₹{orderTotal}</span>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="font-semibold mb-3">Order Items</h3>
-                    {order.items.map((item) => (
-                      <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg">
+                    <h3 className="font-semibold mb-3">Cart Items ({cart.items.length} Thali{cart.items.length > 1 ? 's' : ''})</h3>
+                    {cart.items.map((cartItem, index) => (
+                      <div key={index} className="flex flex-col sm:flex-row gap-4 p-4 border rounded-lg mb-4">
                         <img
-                          src="/images/thali1.png"
-                          alt={item.name}
+                          src={cartItem.type === 'special' && (cartItem.thali as any).image ?
+                            (cartItem.thali as any).image :
+                            "/images/thali1.png"
+                          }
+                          alt={cartItem.thali.name || 'Custom Thali'}
                           className="w-full sm:w-20 h-40 sm:h-20 rounded-md object-cover"
                         />
                         <div className="flex-1">
                           <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                             <div>
-                              <h4 className="font-semibold">{item.name}</h4>
+                              <h4 className="font-semibold">
+                                {cartItem.thali.name || 'Custom Thali'}
+                                <Badge className="ml-2" variant={cartItem.type === 'custom' ? 'default' : 'secondary'}>
+                                  {cartItem.type}
+                                </Badge>
+                              </h4>
                               <p className="text-sm text-muted-foreground">
-                                Quantity: {item.quantity}
+                                Quantity: {cartItem.cartQuantity} | Price per thali: ₹{cartItem.thali.thaliPrice}
                               </p>
                             </div>
-                            <span className="font-semibold">₹{item.price}</span>
+                            <span className="font-semibold">₹{cartItem.thali.thaliPrice * cartItem.cartQuantity}</span>
                           </div>
                           <div className="mt-2">
                             <p className="text-sm font-medium">Items Included:</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                              {item.includedItems.map((includedItem, index) => (
-                                <p key={index}>{includedItem}</p>
+                              {cartItem.thali.menuItems.map((item, itemIndex) => (
+                                <p key={itemIndex}>
+                                  {item.name} (x{item.quantity})
+                                </p>
                               ))}
                             </div>
                           </div>
@@ -253,19 +464,99 @@ export default function History() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-end gap-2">
-                    <Button variant="destructive" className="w-full sm:w-auto">Cancel Order</Button>
-                    <Button className="w-full sm:w-auto text-[black] border-[2px]">
-                      <Download className="h-4 w-4 mr-2 text-[black]" />
-                      Download Invoice
+                    <Link href="/user/cart">
+                      <Button variant="outline" className="w-full sm:w-auto" >
+                        Edit Cart
+                      </Button>
+                    </Link>
+                    <Button
+                      className="w-full sm:w-auto bg-black text-white"
+                      onClick={handlePlaceOrder}
+                      disabled={placingOrder || !selectedAddress || !deliverySchedule}
+                    >
+                      {placingOrder ? 'Placing Order...' : 'Place Order'}
                     </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {filteredOrders.map((order) => (
+            <Card key={order.orderId} className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between p-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">#{order.orderId}</span>
+                    <Badge
+                      variant={getStatusBadgeVariant(order.status)}
+                      className={getStatusBadgeClasses(order.status)}
+                    >
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Order Date: {new Date(order.orderDate).toLocaleDateString()}
+                  </p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleContactOwner(order.orderId)}>
+                      Contact Support
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleDownloadInvoice(order.orderId)}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download Invoice
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="grid gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="font-semibold mb-2">Customer Details</h3>
+                      <div className="space-y-1 text-sm">
+                        <p>{order.customerDetails.name}</p>
+                        <p className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {order.customerDetails.phoneNumber}
+                        </p>
+                        <p className="text-muted-foreground">{order.customerDetails.email}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">Delivery Address</h3>
+                      <p className="text-sm">{order.deliveryAddress.street}</p>
+                      <p className="text-sm">{`${order.deliveryAddress.city} ${order.deliveryAddress.zip}`}</p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span>₹{order.totalPrice}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           ))}
+
+          {filteredOrders.length === 0 && (!cart || cart.items.length === 0) && !loading && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No orders found</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {searchQuery ? 'Try adjusting your search terms' : 'Start shopping to see your orders here'}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
+export default withAuth(History)

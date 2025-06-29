@@ -3,7 +3,7 @@ import { apiClient } from "./config";
 export const cartService = {
     getCartItems: async () => {
         try {
-            const userId = localStorage.getItem('userId');
+            const userId = localStorage.getItem('authToken');
             const response = await apiClient.get(`/api/carts/${userId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`

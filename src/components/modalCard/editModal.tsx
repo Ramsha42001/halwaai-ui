@@ -35,17 +35,17 @@ export function EditModalForm({ data, onClose, onSubmit }: EditModalFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
-        <Input 
-          id="title" 
-          value={editData.title} 
-          onChange={(e) => setEditData({ ...editData, title: e.target.value })} 
+        <Input
+          id="title"
+          value={editData.title}
+          onChange={(e) => setEditData({ ...editData, title: e.target.value })}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="content">Content</Label>
-        <Textarea 
-          id="content" 
+        <Textarea
+          id="content"
           value={editData.description}
           onChange={(e) => setEditData({ ...editData, description: e.target.value })}
           className="min-h-[100px]"
@@ -54,29 +54,29 @@ export function EditModalForm({ data, onClose, onSubmit }: EditModalFormProps) {
 
       <div className="space-y-2 bg-[#fff5f5] text-black">
         <Label htmlFor="buttonText">Button Text</Label>
-        <Input 
-          id="buttonText" 
-          value={editData.buttonText} 
-          onChange={(e) => setEditData({ ...editData, buttonText: e.target.value })} 
+        <Input
+          id="buttonText"
+          value={editData.ButtonText}
+          onChange={(e) => setEditData({ ...editData, ButtonText: e.target.value })}
         />
       </div>
 
       <div className="flex items-center justify-between">
         <Label htmlFor="showOnLoad">Show on Page Load</Label>
-        <Switch 
-          id="showOnLoad" 
+        <Switch
+          id="showOnLoad"
           checked={editData.showOnLoad}
-          onChange={(e) => setEditData({ ...editData, showOnLoad: (e.target as HTMLInputElement).checked })} 
+          onCheckedChange={(checked) => setEditData({ ...editData, showOnLoad: checked })}
         />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="delay">Delay (milliseconds)</Label>
-        <Input 
-          id="delay" 
-          type="number" 
-          value={editData.delay} 
-          onChange={(e) => setEditData({ ...editData, delay: Number(e.target.value) })} 
+        <Input
+          id="delay"
+          type="number"
+          value={editData.delay}
+          onChange={(e) => setEditData({ ...editData, delay: Number(e.target.value) })}
         />
       </div>
 

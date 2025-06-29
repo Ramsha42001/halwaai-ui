@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Header />
             <SubHeader />
             <AdminNav />
-            <div className="bg-foreground mb-[0px] w-[100%] h-auto min-h-[100vh]">
+            <div className="bg-[#fff5f5] mb-[0px] w-[100%] h-auto min-h-[100vh]">
                {children}
             </div>
          </ToastProvider>

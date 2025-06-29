@@ -6,11 +6,12 @@ import Link from "next/link";
 import { useState, useEffect } from 'react';
 import { menuItemService } from '@/services/api/menuItemService';
 import { useSearchParams } from 'next/navigation';
-import { cartService } from '@/services/api/cartService';
 import { useStore } from '@/services/store/menuItemsStore'
 import { CustomPopup } from "@/components/popup";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import withAuth from "@/utils/withAuth";
+import { useRouter } from 'next/navigation';
 
 interface MenuItem {
   _id: string
@@ -26,71 +27,72 @@ interface MenuItem {
   quantity: number
 }
 
-export default function Thali() {
+function Thali() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const selectedItemIds = searchParams.get('items')?.split(',') || [];
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [dialog, setdialog] = useState(false);
   const [thaliName, setThaliName] = useState('');
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
 
+  const { selectedItems, subscribe, unsubscribe, orderTotal, addCustomThaliToCart, clearSelectedItems } = useStore();
+  const user = localStorage.getItem('authToken')
+
+  useEffect(() => {
+    if (user) {
+      subscribe(user);
+      return () => unsubscribe();
+    }
+  }, [user, subscribe, unsubscribe]);
 
   const handleOpenThaliNameDialog = async () => {
     setdialog(!dialog);
-
   }
+
   useEffect(() => {
     menuItemService.getMenuItems().then((response) => {
       setMenuItems(response)
     })
   }, [])
 
-
   const handleAddToCart = async () => {
-    const menuItemsArray = filteredSelectedMenuItems.map(item => ({
-      name: item.name,        // Required: Name of the menu item
-      price: item.price,      // Required: Price of the menu item
-      quantity: item.quantity  // Required: Quantity of the menu item
-    }));
-
-    const payload = {
-      userId: localStorage.getItem('userId'), // Ensure this is not null
-      thaaliTitle: thaliName,                  // Required: Title of the thali
-      menuItems: menuItemsArray,                // Required: Array of menu items
-      thaaliTotalPrice: orderTotal,             // Required: Total price of the thali
-      thaliquantity: filteredSelectedMenuItems.length // Required: Total number of selected items
-    };
-
-    // Check if userId is valid before sending the request
-    if (!payload.userId) {
-      console.error("User ID is required.");
+    if (!thaliName.trim()) {
+      alert('Please enter a name for your thali');
       return;
     }
 
-    const response = await cartService.addToCart(payload);
-    console.log(response);
+    setIsAddingToCart(true);
+    try {
+      const userId = localStorage.getItem('authToken');
+
+      // Add custom thali to cart using the store function
+      await addCustomThaliToCart(userId, thaliName);
+
+      // Clear selected items after adding to cart
+      await clearSelectedItems(userId);
+
+      // Close dialog
+      setdialog(false);
+
+      // Show success message or redirect
+      alert('Thali added to cart successfully!');
+
+      // Optionally redirect to cart page
+      // router.push('/user/cart');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add thali to cart');
+    } finally {
+      setIsAddingToCart(false);
+    }
   }
 
-
-  // Calculate total order amount
-  const { selectedItems, setOrderTotal } = useStore();
-  // const orderTotal = selectedItems.reduce((sum, { item, quantity }) => sum + (item.price * quantity), 0);
-  const filteredSelectedMenuItems = menuItems.filter(item =>
-    item && item._id && Array.from(selectedItems.keys()).includes(item._id) // Ensure item is not null and has _id
-  ).map(item => ({
+  // Filter selected menu items based on store state
+  const filteredSelectedMenuItems = selectedItems.map(item => ({
     ...item,
-    quantity: selectedItems.get(item._id) || 0,
-    name: item.name,
-    description: item.description,
-    price: item.price,
     butter: item.hasButter,
   }));
-
-  const orderTotal = filteredSelectedMenuItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-  // Update orderTotal in store whenever it changes
-  useEffect(() => {
-    setOrderTotal(orderTotal);
-  }, [orderTotal, setOrderTotal]);
 
   return (
     <div className="flex flex-col min-h-screen mt-[70px] text-[black] pb-[40%] sm:pb-[40%] lg:pb-[5%]">
@@ -131,7 +133,7 @@ export default function Thali() {
                   </div>
                   <p className="font-medium text-sm mt-2 text-gray-600">{item.description}</p>
                   <p className="font-medium text-sm mt-2 text-gray-600">Quantity: {item.quantity}</p>
-                  {item.butter ? <p className="font-medium text-sm mt-2 text-gray-600">With Butter</p> : <></>}
+                  {item.butter ? <p className="font-medium text-sm mt-2 text-gray-600">With Butter</p> : null}
                 </div>
               ))}
             </div>
@@ -147,19 +149,24 @@ export default function Thali() {
               <span className="font-bold text-[black]">Order Total: ₹{orderTotal}</span>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <Button
+              {selectedItems.length !== 0 ? <><Button
                 className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-2 w-full sm:w-auto"
                 onClick={handleOpenThaliNameDialog}
               >
                 Add to Cart
-              </Button>
-              <Link href="/user/address">
+              </Button></> : <><Link href='/user/cart'><Button
+                className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-2 w-full sm:w-auto"
+              >
+                Go to Cart
+              </Button></Link></>}
+              {/* <Link href="/user/address">
                 <Button
                   className="bg-black hover:bg-gray-800 text-white px-8 py-2 w-full sm:w-auto"
+                  disabled={selectedItems.length === 0}
                 >
                   Proceed to checkout
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>
@@ -175,8 +182,9 @@ export default function Thali() {
             <Button
               className="bg-black text-white hover:bg-gray-800"
               onClick={handleAddToCart}
+              disabled={isAddingToCart || !thaliName.trim()}
             >
-              Submit
+              {isAddingToCart ? 'Adding...' : 'Submit'}
             </Button>
           </div>
         }
@@ -185,12 +193,14 @@ export default function Thali() {
           <Label htmlFor="thaliName">Thali Name</Label>
           <Input
             id="thaliName"
-            placeholder="Enter the name of your Thali"// Assuming setThaliName is a state setter for thali name
+            placeholder="Enter the name of your Thali"
+            value={thaliName}
             onChange={(e) => setThaliName(e.target.value)}
           />
         </div>
-
       </CustomPopup>
     </div>
   );
 }
+
+export default withAuth(Thali)

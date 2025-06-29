@@ -1,24 +1,26 @@
 "use client";
 
-import { SignupForm} from "@/components/signupForm/page"; // Import the type
+import { SignupForm } from "@/components/signupForm/page"; // Import the type
 import Header from "@/components/uheader/page";
 import Image from 'next/image';
 import signupImage from "../../../public/images/signupImage.png";
 import { useState } from "react"; // Import useState
 import { useRouter } from 'next/navigation';
 import authService from "@/services/api/authService";
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const router = useRouter();
 
-   const handleSignup = async (credentials: {
+  const handleSignup = async (credentials: {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
     confirmPassword: string;
-  }) => { 
+  }) => {
     try {
       await authService.signup(credentials.email, credentials.password, credentials.firstName, credentials.lastName);
       router.push("/login");
@@ -27,8 +29,6 @@ export default function Home() {
     }
   };
 
-
-  
   return (
     <div className="min-h-screen bg-foreground text-[black] flex-column">
       <Header />
@@ -47,7 +47,7 @@ export default function Home() {
             />
           </div>
           <div className="w-full md:w-1/2 p-8 md:p-12">
-            <SignupForm onSubmit={handleSignup} isLoading={isLoading} /> {/* Pass props */}
+            <SignupForm isLoading={isLoading} />
           </div>
         </div>
       </main>

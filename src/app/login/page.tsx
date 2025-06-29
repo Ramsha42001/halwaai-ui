@@ -4,36 +4,79 @@ import { LoginForm } from "@/components/loginForm/page"
 import loginImage from "../../../public/images/loginImage.png"
 import { useEffect, useState } from "react";
 import Header from "@/components/uheader/page";
-import { useRouter } from "next/navigation";
-import { authService } from "@/services/api/authService";
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function Home() {
-    const router = useRouter();
     const [isClient, setIsClient] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Admin email from your withAuth.tsx
+    const ADMIN_EMAIL = 'admin.halwai@gmail.com';
 
     useEffect(() => {
         setIsClient(true);
     }, []);
 
+    // Check if user is admin based on email
+    const isAdminUser = (email: string): boolean => {
+        const result = email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+        console.log(`Email comparison: "${email.toLowerCase().trim()}" === "${ADMIN_EMAIL.toLowerCase().trim()}" = ${result}`);
+        return result;
+    };
+
     const handleLogin = async (credentials: { email: string; password: string }) => {
         try {
             setLoading(true);
             setError("");
-            const response = await authService.login(credentials.email, credentials.password);
-            console.log("Login successful:", response);
-            if(localStorage.getItem('userId')==='682c2913c87c02f49a6165cd'){
-                router.push('/admin'); // Redirect to admin page after successful login
-            }else{
-                router.push('/user'); // Redirect to admin page after successful login
+
+            console.log("Starting login process...");
+
+            // Use Firebase authentication
+            const userCredential = await signInWithEmailAndPassword(
+                auth,
+                credentials.email.trim(),
+                credentials.password
+            );
+
+            const user = userCredential.user;
+            console.log("Firebase login successful:", user);
+
+            // Check if user is admin
+            if (user.email && isAdminUser(user.email)) {
+                console.log("Admin user detected, redirecting to admin panel");
+                // Use window.location for immediate navigation
+                window.location.href = '/admin';
+            } else {
+                console.log("Regular user, redirecting to user dashboard");
+                // Use window.location for immediate navigation
+                window.location.href = '/';
             }
-        } catch (err) {
-            setError("Login failed. Please check your credentials.");
-            console.error("Login error:", err);
-        } finally {
+
+        } catch (err: any) {
+            console.error("Firebase login error:", err);
+
+            // Handle specific Firebase auth errors
+            let errorMessage = "Login failed. Please check your credentials.";
+
+            if (err.code === 'auth/user-not-found') {
+                errorMessage = "No account found with this email address.";
+            } else if (err.code === 'auth/wrong-password') {
+                errorMessage = "Incorrect password.";
+            } else if (err.code === 'auth/invalid-email') {
+                errorMessage = "Invalid email address.";
+            } else if (err.code === 'auth/user-disabled') {
+                errorMessage = "This account has been disabled.";
+            } else if (err.code === 'auth/too-many-requests') {
+                errorMessage = "Too many failed attempts. Please try again later.";
+            }
+
+            setError(errorMessage);
             setLoading(false);
         }
+        // Don't set loading to false here if navigation is successful
+        // because we're redirecting anyway
     };
 
     return (
@@ -49,7 +92,11 @@ export default function Home() {
                         />
                     </div>
                     <div className="w-full md:w-1/2 p-8 md:p-12">
-                        {error && <div className="text-red-500 mb-4">{error}</div>}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                                {error}
+                            </div>
+                        )}
                         <LoginForm onSubmit={handleLogin} isLoading={loading} />
                     </div>
                 </div>

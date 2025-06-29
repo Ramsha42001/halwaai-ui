@@ -11,6 +11,7 @@ const headerItems = [
   "Update Menu Items",
   "Update Predefined Thalis",
   "Update Modal",
+  "Users"
 ];
 
 export default function SubHeader() {
@@ -29,6 +30,9 @@ export default function SubHeader() {
       case "/admin/modalManagement":
         setActiveCategory("Update Modal");
         break;
+      case "/admin/users":
+        setActiveCategory("Users");
+        break;
       default:  // Or handle other cases as needed. You might set a default active category here
         setActiveCategory("");
     }
@@ -41,14 +45,17 @@ export default function SubHeader() {
       router.push("/admin/predefinedThaalis");
     } else if (category === "Update Menu Items") {
       router.push("/admin/menuItems");
-    } else if(category === "Update Modal"){
+    } else if (category === "Update Modal") {
       router.push("/admin/modalManagement")
+    }
+    else if (category === "Users") {
+      router.push("/admin/users");
     }
 
   };
 
   return (
-      <div className="bg-[#000000] flex flex-wrap justify-center mt-[70px] items-center  p-4 text-[black]">
+    <div className="hidden md:block bg-[#000000] flex flex-wrap justify-center mt-[70px] items-center  p-4 text-[black]">
       {headerItems.map((category) => (
         <Button
           key={category}
