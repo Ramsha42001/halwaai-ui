@@ -1,14 +1,14 @@
-export const API_URL = 'http://localhost:3000';
+export const API_URL = 'https://halwaai-server-410805250566.us-central1.run.app';
 import axios from 'axios';
 
 
 export const apiClient = axios.create({
-    baseURL: API_URL,
-    withCredentials: true,
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
 
 
 //   apiClient.interceptors.request.use((config) => {
