@@ -1,16 +1,17 @@
 "use client";
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { useState } from "react";
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { storageService } from "@/utils/storage";
 import { useAuthStore } from '@/services/store/authStore'
+
 interface LoginFormProps {
   onSubmit: (credentials: { email: string; password: string }) => Promise<void>;
   isLoading: boolean;
@@ -31,7 +32,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading }) => 
   const handleLogin = async () => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      localStorage.setItem('authToken', result.user.uid);
+      storageService.setAuthToken(result.user.uid);
       router.push("/");
     }
     catch (error) {
@@ -42,6 +43,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading }) => 
 
   const handleGoogleLogin = async () => {
     try {
+      const googleProvider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const uid = user.uid;
@@ -50,7 +52,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading }) => 
 
       useAuthStore.getState().setUser(user);
       console.log('user', user.uid);
-      localStorage.setItem('authToken', user.uid);
+      storageService.setAuthToken(user.uid);
 
       router.push('/'); // redirect to a protected page
     } catch (error) {

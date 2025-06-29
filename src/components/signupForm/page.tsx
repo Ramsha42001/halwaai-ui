@@ -1,17 +1,18 @@
 "use client";
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FcGoogle } from "react-icons/fc";
-import { useState } from "react";
-import authService from "@/services/api/authService";
+import Link from "next/link";
+import { createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import { storageService } from "@/utils/storage";
 
 interface SignupFormProps {
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 export const SignupForm: React.FC<SignupFormProps> = ({ isLoading }) => {
@@ -26,13 +27,14 @@ export const SignupForm: React.FC<SignupFormProps> = ({ isLoading }) => {
 
   const handleGoogleSignup = async () => {
     try {
+      const googleProvider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       const uid = user.uid;
       console.log(uid);
       console.log('Google Signup success:', user);
 
-      localStorage.setItem('authToken', user.uid);
+      storageService.setAuthToken(user.uid);
 
       router.push('/'); // redirect to a protected page
     } catch (error) {

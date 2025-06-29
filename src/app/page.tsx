@@ -17,6 +17,7 @@ import { ModalConfig } from "@/app/types/modal";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { menuItemService } from '@/services/api/menuItemService';
 import modalService from "@/services/api/modalService";
+import { storageService, STORAGE_KEYS } from "@/utils/storage";
 
 // Enhanced Login Modal Component
 const LoginModal = ({ modal, isOpen, onClose }: {
@@ -159,10 +160,10 @@ export default function Home() {
   // Handle token and modal logic
   useEffect(() => {
     const token = searchParams.get('token');
-    const existingToken = localStorage.getItem('authToken');
+    const existingToken = storageService.getAuthToken();
 
     if (token && !hasProcessedToken) {
-      localStorage.setItem('token', token);
+      storageService.setItem(STORAGE_KEYS.TOKEN, token);
       console.log('Token saved:', token);
       setHasProcessedToken(true);
 

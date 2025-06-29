@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import Header from "@/components/uheader/page";
 import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { storageService } from "@/utils/storage";
 
 export default function Home() {
     const [isClient, setIsClient] = useState(false);
@@ -81,6 +82,11 @@ export default function Home() {
         // Don't set loading to false here if navigation is successful
         // because we're redirecting anyway
     };
+
+    // Don't render anything until we're on the client side
+    if (!isClient) {
+        return <div>Loading...</div>;
+    }
 
     return (
         <div className="min-h-screen bg-foreground text-[black] flex-column">

@@ -13,6 +13,7 @@ import { menuItems } from "@/data/menu-items";
 import { ThaliCard } from "../thaaliComponent/page";
 import { menuItemService } from "@/services/api";
 import { cartService } from "@/services/api/cartService";
+import { storageService } from "@/utils/storage";
 
 export default function PredefinedThali() {
   const [predefinedThali, setPredefinedThali] = useState<PredefinedThali[]>([]);
@@ -20,7 +21,7 @@ export default function PredefinedThali() {
   const [error, setError] = useState<Error | null>(null);
   const [filteredMenuItems, setFilteredMenuItems] = useState([]);
 
-  const selectedThali = JSON.parse(localStorage.getItem('selectedThali') || '{}');
+  const selectedThali = JSON.parse(storageService.getItem('selectedThali') || '{}');
   console.log(selectedThali)
 
   const thaliToCart = async () => {
@@ -63,9 +64,9 @@ export default function PredefinedThali() {
         console.log('API Response:', response);
 
         // Filter menu items based on predefined thali items
-        const filteredItems = response.filter(menuItem =>
+        const filteredItems = response.filter((menuItem: any) =>
           predefinedThali.some(thali =>
-            thali.menuItems.some(item => item._id === menuItem._id)
+            thali.menuItems.some((item: any) => item._id === menuItem._id)
           )
         );
 
@@ -145,7 +146,7 @@ export default function PredefinedThali() {
                       _id={thali._id}
                       title={thali.name}
                       description={thali.description}
-                      items={thali.menuItems.map(item => ({
+                      items={thali.menuItems.map((item: any) => ({
                         _id: item._id,
                         name: item.name,
                         price: item.price,

@@ -3,6 +3,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { storageService } from "@/utils/storage";
 
 const CallbackPage = () => {
     const router = useRouter();
@@ -13,7 +14,7 @@ const CallbackPage = () => {
 
         if (token) {
             // Save the token to local storage
-            localStorage.setItem('token', token);
+            storageService.setItem('token', token);
             console.log('Token saved to local storage:', token);
 
             // Redirect to the dashboard or home page

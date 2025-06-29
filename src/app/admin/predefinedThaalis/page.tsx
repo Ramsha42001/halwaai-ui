@@ -339,7 +339,7 @@ function PredefinedThaalis() {
                                   ...prev.menuItems,
                                   {
                                     name: item.name,
-                                    image: item.image,
+                                    image: item.imageUrl || '',
                                     price: item.price,
                                     description: item.description,
                                     quantity: 1,
@@ -579,7 +579,7 @@ function PredefinedThaalis() {
                                   ...prev.menuItems,
                                   {
                                     name: item.name,
-                                    image: item.image,
+                                    image: item.imageUrl || '',
                                     price: item.price,
                                     description: item.description,
                                     quantity: 1,

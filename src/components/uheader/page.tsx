@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link"; // Import the Link component for routing
 import { usePathname } from 'next/navigation'; // Import usePathname to get the current route
 import {
@@ -13,12 +13,23 @@ import { Menu, X } from 'lucide-react';
 import { ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/services/store/authStore";
 import { getAuth, signOut } from 'firebase/auth';
+import { storageService } from "@/utils/storage";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to control dropdown visibility
+  const [isClient, setIsClient] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const pathname = usePathname(); // Get current route
   const auth = useAuthStore();
+
+  // Check if we're on the client side and load auth data
+  useEffect(() => {
+    setIsClient(true);
+    setAuthToken(storageService.getAuthToken());
+    setUsername(storageService.getUsername());
+  }, []);
 
   // Check if the current route is either /login, /signup, /user, or /admin
   const isAuthPage = pathname === "/login" || pathname === "/signup" || pathname === "/user" || pathname === "/admin" || pathname === '/user/thali' || pathname === '/user/address' || pathname === '/user/history' || pathname === '/user/cart' || pathname === '/admin/modalManagement' || pathname === '/admin/predefinedThaalis' || pathname === '/admin/menuItems' || pathname === '/admin/users';
@@ -27,10 +38,8 @@ export default function Header() {
   const showUserDropdown = pathname === "/user" || pathname === "/admin" || pathname === '/user/thali' || pathname === '/user/address' || pathname === '/user/history' || pathname === '/user/cart' || pathname === '/admin/modalManagement' || pathname === '/admin/predefinedThaalis' || pathname === '/admin/menuItems' || pathname === '/admin/users';
 
   const handleLogout = async () => {
-    localStorage.removeItem('authToken');
+    storageService.clearAuthData();
     await signOut(getAuth());
-    localStorage.removeItem('userId');
-    localStorage.removeItem('username');
     window.location.href = '/login';
   };
 
@@ -58,7 +67,7 @@ export default function Header() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink
-                  href={localStorage.getItem('authToken') ? '/user' : '/login'}
+                  href={authToken ? '/user' : '/login'}
                   className="hover:text-gray-300 transition-colors"
                 >
                   Customize Thali
@@ -105,7 +114,7 @@ export default function Header() {
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <NavigationMenuLink
-                  href={localStorage.getItem('authToken') ? '/user' : '/login'}
+                  href={authToken ? '/user' : '/login'}
                   className="hover:text-gray-300 transition-colors block py-2"
                 >
                   Customize Thali
@@ -123,7 +132,7 @@ export default function Header() {
           )}
 
           {/* Authentication Section */}
-          {!localStorage.getItem('authToken') ? (
+          {!authToken ? (
             <>
               {/* Mobile Login/Signup buttons */}
               <div className="space-y-4 mt-4 p-2">
@@ -143,7 +152,7 @@ export default function Header() {
         </NavigationMenu>
 
         {/* Desktop Authentication Section */}
-        {!localStorage.getItem('authToken') ? (
+        {!authToken ? (
           <div className="hidden lg:flex space-x-4">
             <Link href="/login">
               <button className="border border-white px-4 py-2 rounded-md hover:bg-white hover:text-black transition-colors">
@@ -165,7 +174,7 @@ export default function Header() {
               <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
                 <span className="text-xl">👤</span>
               </div>
-              <span>{localStorage.getItem('username')}</span>
+              <span>{username || 'User'}</span>
               <ChevronDown />
             </button>
 
