@@ -89,7 +89,7 @@ export default function BottomNav() {
             </Link>
 
             <Link
-              href="/user/history"
+              href="/user/orderSummary"
               className={`flex flex-col items-center space-y-1 w-1/4 p-2 ${pathname === '/user/orders' ? 'text-primary' : 'text-white'}`}
             >
               <ClipboardList className="h-6 w-6" />
