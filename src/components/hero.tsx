@@ -1,12 +1,23 @@
 'use client'; // Add this line to mark the component as a client component
 
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Utensils, Percent, Truck } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion'; // Import motion
+import { storageService } from "@/utils/storage";
 
 export default function Hero() {
+
+    const [authToken, setAuthToken] = useState<string | null>(null);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+        setAuthToken(storageService.getAuthToken());
+    }, []);
+
     const handlePredefinedScroll = () => {
         const predefinedSection = document.getElementById("predefined");
         if (predefinedSection) {
@@ -16,7 +27,7 @@ export default function Hero() {
 
     return (
         <motion.div
-            className="w-full min-h-[100vh] h-auto bg-background text-white px-4 sm:px-8 mt-[70px] md:mt-[50px] lg:mt-[70px] md:px-20 py-10"
+            className="w-full min-h-[100vh] h-auto bg-background text-white px-4 sm:px-8 mt-[120px] md:mt-[50px] lg:mt-[70px] md:px-20 py-10"
             initial={{ opacity: 0, y: 50 }} // Initial state
             animate={{ opacity: 1, y: 0 }} // Animate to this state
             transition={{ duration: 0.5 }} // Transition duration
@@ -52,7 +63,7 @@ export default function Hero() {
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-4 mt-6 w-full sm:w-auto">
                             <Link
-                                href={localStorage.getItem('authToken') ? '/user' : '/login'}
+                                href={authToken ? '/user' : '/login'}
                             >
                                 <Button
                                     className="bg-black hover:bg-black/90 text-white font-bold px-6 py-3 w-full sm:w-auto"

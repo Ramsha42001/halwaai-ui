@@ -10,7 +10,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { Menu, X } from 'lucide-react';
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Shield } from "lucide-react";
 import { useAuthStore } from "@/services/store/authStore";
 import { getAuth, signOut } from 'firebase/auth';
 import { storageService } from "@/utils/storage";
@@ -21,14 +21,29 @@ export default function Header() {
   const [isClient, setIsClient] = useState(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname(); // Get current route
   const auth = useAuthStore();
+
+  // Admin email from your withAuth.tsx
+  const ADMIN_EMAIL = 'admin.halwai@gmail.com';
+
+  // Check if user is admin based on email
+  const isAdminUser = (email: string): boolean => {
+    return email.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim();
+  };
 
   // Check if we're on the client side and load auth data
   useEffect(() => {
     setIsClient(true);
     setAuthToken(storageService.getAuthToken());
     setUsername(storageService.getUsername());
+
+    // Check if current user is admin
+    const currentUser = getAuth().currentUser;
+    if (currentUser?.email) {
+      setIsAdmin(isAdminUser(currentUser.email));
+    }
   }, []);
 
   // Check if the current route is either /login, /signup, /user, or /admin
@@ -36,6 +51,9 @@ export default function Header() {
 
   // Conditionally render the user icon dropdown on /user or /admin routes
   const showUserDropdown = pathname === "/user" || pathname === "/admin" || pathname === '/user/thali' || pathname === '/user/address' || pathname === '/user/history' || pathname === '/user/cart' || pathname === '/admin/modalManagement' || pathname === '/admin/predefinedThaalis' || pathname === '/admin/menuItems' || pathname === '/admin/users';
+
+  // Show mobile menu on login/signup pages or when not authenticated
+  const showMobileMenuButton = !authToken || pathname === "/login" || pathname === "/signup";
 
   const handleLogout = async () => {
     storageService.clearAuthData();
@@ -54,7 +72,7 @@ export default function Header() {
         </Link>
 
         {/* Navigation Links - Centered */}
-        {/* {!isAuthPage && (
+        {!isAuthPage && (
           <NavigationMenu className="hidden lg:flex flex-1 justify-center">
             <NavigationMenuList className="flex space-x-6">
               <NavigationMenuItem>
@@ -83,10 +101,10 @@ export default function Header() {
               </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
-        )} */}
+        )}
 
-        {/* Hamburger Menu for Mobile */}
-        {/* {!showUserDropdown && (
+        {/* Hamburger Menu for Mobile - Show on login/signup pages and when not authenticated */}
+        {showMobileMenuButton && (
           <button
             className="lg:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -98,58 +116,60 @@ export default function Header() {
               <Menu className="h-6 w-6" />
             )}
           </button>
-        )} */}
+        )}
 
         {/* Mobile Navigation Menu */}
-        <NavigationMenu className={`lg:hidden ${isMenuOpen ? 'flex' : 'hidden'} flex-col absolute top-16 right-[10px] w-full bg-black z-[50]`}>
-          {!isAuthPage && (
-            <NavigationMenuList className="flex flex-col space-y-4 p-4">
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  href="#predefined"
-                  className="hover:text-gray-300 transition-colors block py-2"
-                >
-                  Special Thali
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  href={authToken ? '/user' : '/login'}
-                  className="hover:text-gray-300 transition-colors block py-2"
-                >
-                  Customize Thali
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  href="#"
-                  className="hover:text-gray-300 transition-colors block py-2"
-                >
-                  Contact Us
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          )}
+        {showMobileMenuButton && (
+          <NavigationMenu className={`lg:hidden ${isMenuOpen ? 'flex' : 'hidden'} flex-col absolute top-16 right-4 bg-black z-[50] rounded-lg shadow-lg border border-gray-700 w-64`}>
+            {!isAuthPage && (
+              <NavigationMenuList className="flex flex-col space-y-2 p-4 border-b border-gray-700">
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href="#predefined"
+                    className="hover:text-gray-300 transition-colors block py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Special Thali
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href={authToken ? '/user' : '/login'}
+                    className="hover:text-gray-300 transition-colors block py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Customize Thali
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink
+                    href="#"
+                    className="hover:text-gray-300 transition-colors block py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Contact Us
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            )}
 
-          {/* Authentication Section */}
-          {!authToken ? (
-            <>
-              {/* Mobile Login/Signup buttons */}
-              <div className="space-y-4 mt-4 p-2">
-                <Link href="/login">
-                  <button className="my-[5px] w-full border border-white px-4 py-2 rounded-md hover:bg-white hover:text-black transition-colors">
+            {/* Authentication Section for Mobile */}
+            {!authToken && (
+              <div className="flex flex-col space-y-3 p-4">
+                <Link href="/login" onClick={() => setIsMenuOpen(false)}>
+                  <button className="w-full border border-white px-4 py-3 rounded-md hover:bg-white hover:text-black transition-colors text-center">
                     Login
                   </button>
                 </Link>
-                <Link href="/signup">
-                  <button className="w-full border border-white px-4 py-2 rounded-md hover:bg-white hover:text-black transition-colors">
-                    SignUp
+                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <button className="w-full border border-white px-4 py-3 rounded-md hover:bg-white hover:text-black transition-colors text-center">
+                    Sign Up
                   </button>
                 </Link>
               </div>
-            </>
-          ) : null}
-        </NavigationMenu>
+            )}
+          </NavigationMenu>
+        )}
 
         {/* Desktop Authentication Section */}
         {!authToken ? (
@@ -171,30 +191,45 @@ export default function Header() {
               className="flex items-center space-x-2 text-white"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
             >
-              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                <span className="text-xl">👤</span>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isAdmin ? 'bg-red-600' : 'bg-gray-600'}`}>
+                {isAdmin ? (
+                  <Shield className="w-5 h-5 text-white" />
+                ) : (
+                  <span className="text-xl">👤</span>
+                )}
               </div>
-              <span>{username || 'User'}</span>
               <ChevronDown />
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-[100%] right-0 mt-2 bg-black text-white rounded-md shadow-lg w-48">
+              <div className="absolute top-[100%] right-0 mt-2 bg-black text-white rounded-md shadow-lg w-48 border border-gray-700">
                 <ul>
+                  {/* Show Admin Portal option only for admin users */}
+                  {isAdmin && (
+                    <li>
+                      <Link href="/admin">
+                        <p className="block px-4 py-2 hover:bg-gray-700 rounded-t-md flex items-center space-x-2">
+                          <Shield className="w-4 h-4" />
+                          <span>Admin Portal</span>
+                        </p>
+                      </Link>
+                    </li>
+                  )}
+
                   <li>
                     <Link href="/user/cart">
-                      <p className="block px-4 py-2 hover:bg-gray-700">Your Cart</p>
+                      <p className={`block px-4 py-2 hover:bg-gray-700 ${!isAdmin ? 'rounded-t-md' : ''}`}>Your Cart</p>
                     </Link>
                   </li>
                   <li>
-                    <Link href="/user/history">
-                      <p className="block px-4 py-2 hover:bg-gray-700">Order History</p>
+                    <Link href="/user/orderSummary">
+                      <p className="block px-4 py-2 hover:bg-gray-700">Your Orders</p>
                     </Link>
                   </li>
                   <li>
                     <button
                       onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-700"
+                      className="w-full text-left px-4 py-2 hover:bg-gray-700 rounded-b-md"
                     >
                       Logout
                     </button>

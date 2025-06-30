@@ -142,6 +142,9 @@ function HomeContent() {
   const [loginModalData, setLoginModalData] = useState<ModalConfig | null>(null);
   const [hasProcessedToken, setHasProcessedToken] = useState(false);
 
+  // Storage key for tracking modal display
+  const MODAL_SHOWN_KEY = 'welcome_modal_shown';
+
   // Fetch menu items
   useEffect(() => {
     const fetchMenuItems = async () => {
@@ -161,24 +164,41 @@ function HomeContent() {
   useEffect(() => {
     const token = searchParams.get('token');
     const existingToken = storageService.getAuthToken();
+    const hasModalBeenShown = storageService.getItem(MODAL_SHOWN_KEY);
 
-    if (token && !hasProcessedToken) {
-      storageService.setItem(STORAGE_KEYS.TOKEN, token);
-      console.log('Token saved:', token);
+    // Only process if we haven't already processed and modal hasn't been shown
+    if (!hasProcessedToken && !hasModalBeenShown) {
+      if (token) {
+        // New login with token - save token and show modal
+        storageService.setItem(STORAGE_KEYS.TOKEN, token);
+        console.log('Token saved:', token);
+        setHasProcessedToken(true);
+
+        // Fetch and show login modal for new login
+        fetchLoginModal();
+
+        // Clean URL by removing token parameter
+        const url = new URL(window.location.href);
+        url.searchParams.delete('token');
+        window.history.replaceState({}, '', url.toString());
+
+      } else if (existingToken) {
+        // User has existing token but modal hasn't been shown yet
+        // This handles the case where user logs in and then navigates to home
+        setHasProcessedToken(true);
+
+        // Check if this is a fresh session (no modal shown flag)
+        // and if there's a recent login indicator
+        const lastLoginTime = storageService.getItem('last_login_time');
+        const currentTime = Date.now();
+
+        // Show modal if login was within last 5 minutes (300000ms)
+        if (lastLoginTime && (currentTime - parseInt(lastLoginTime)) < 300000) {
+          fetchLoginModal();
+        }
+      }
+    } else {
       setHasProcessedToken(true);
-
-      // Fetch and show login modal
-      fetchLoginModal();
-
-      // Clean URL by removing token parameter
-      const url = new URL(window.location.href);
-      url.searchParams.delete('token');
-      window.history.replaceState({}, '', url.toString());
-
-    } else if (existingToken && !hasProcessedToken) {
-      // User already has token, still check for login modal
-      setHasProcessedToken(true);
-      fetchLoginModal();
     }
   }, [searchParams, hasProcessedToken]);
 
@@ -187,7 +207,6 @@ function HomeContent() {
     try {
       console.log('Fetching login modal...');
 
-      // Fix: Change getModals() to getModal()
       const modals = await modalService.getModal();
       console.log('All modals:', modals);
 
@@ -228,43 +247,11 @@ function HomeContent() {
   // Handle modal close
   const handleCloseLoginModal = () => {
     setShowLoginModal(false);
-    console.log('Login modal closed');
+
+    // Mark modal as shown so it won't appear again
+    storageService.setItem(MODAL_SHOWN_KEY, 'true');
+    console.log('Login modal closed and marked as shown');
   };
-
-  // WebSocket connection
-  useEffect(() => {
-    let socket: WebSocket;
-
-    try {
-      socket = new WebSocket('ws://localhost:3000');
-
-      socket.onopen = () => {
-        console.log('Connected to WebSocket server');
-        socket.send('Hello Server!');
-      };
-
-      socket.onmessage = (event) => {
-        console.log('Message from server:', event.data);
-      };
-
-      socket.onclose = () => {
-        console.log('Disconnected from WebSocket server');
-      };
-
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-    } catch (error) {
-      console.error('Failed to connect to WebSocket:', error);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close();
-      }
-    };
-  }, []);
 
   return (
     <>
@@ -289,7 +276,7 @@ function HomeContent() {
 
       {/* WhatsApp Icon */}
       <a
-        href="https://wa.me/yourwhatsappnumber"
+        href="https://wa.me/8279243897"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-20 sm:bottom-20 lg:bottom-5 right-5 bg-green-500 p-3 rounded-full text-white z-[9999] hover:bg-green-600 transition-all"

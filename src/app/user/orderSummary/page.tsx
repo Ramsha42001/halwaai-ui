@@ -365,11 +365,11 @@ function OrderSummary() {
             <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b z-30">
                 <div className="flex items-center gap-4">
                     <Link href="/user/orderSummary">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" style={{ color: 'black' }}>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-xl md:text-2xl font-semibold">My Orders</h1>
+                    <h1 className="text-xl md:text-2xl font-semibold text-[black]">My Orders</h1>
                 </div>
             </div>
 

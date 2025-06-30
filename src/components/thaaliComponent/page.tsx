@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { menuItems } from "@/data/menu-items";
 import { useStore } from '@/services/store/menuItemsStore';
 import predefinedThaliService from "@/services/api/predefinedThaliService";
+import { storageService } from "@/utils/storage"
 
 interface MenuItem {
   _id: string;
@@ -44,8 +45,19 @@ export function ThaliCard({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+
 
   const { addSpecialThaliToCart, cart } = useStore();
+
+  useEffect(() => {
+    setIsClient(true);
+    setAuthToken(storageService.getAuthToken());
+    setUsername(storageService.getUsername());
+  }, []);
+
 
   // Check if this thali is already in cart and get its quantity
   useEffect(() => {
@@ -161,7 +173,7 @@ export function ThaliCard({
 
   return (
     <>
-      <div className="relative w-[350px] min-h-[500px] h-auto ">
+      <div className="relative w-[90%] sm:w-[350px] min-h-[500px] h-auto mx-auto my-[10px]">
         <div className="relative w-[250px] h-[250px] mx-auto my-0 bg-[white] rounded-full z-10">
           <img src={image} alt={image} className="object-cover w-[100%] h-[100%] rounded-full" />
           {showButton && (
@@ -177,7 +189,7 @@ export function ThaliCard({
             <p className="text-sm opacity-90">₹{price}</p>
           </CardHeader>
           <CardContent className="space-y-2 flex-grow">
-            {Object.entries(items).map(([category, item], idx) => (
+            {items.map((item, idx) => (
               <div key={item._id} className="flex items-center gap-3 flex-row justify-between">
                 <span className="text-sm">{item.name}</span>
                 <span className="text-sm">{item.quantity}</span>
@@ -199,7 +211,7 @@ export function ThaliCard({
                 Delete Thali
               </Button>
             </div>
-          ) : quantity == 0 ? (
+          ) : quantity == 0 && authToken ? (
             <div className="absolute bottom-2 right-2 flex items-center">
               <Button
                 className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
@@ -209,7 +221,7 @@ export function ThaliCard({
                 {isAddingToCart ? 'Adding...' : 'Add Thali'}
               </Button>
             </div>
-          ) : (
+          ) : authToken ? (
             <div className="absolute bottom-2 right-2 flex items-center">
               <Button
                 className="bg-black hover:bg-gray-800 text-white"
@@ -226,7 +238,7 @@ export function ThaliCard({
                 -
               </Button>
             </div>
-          )}
+          ) : <></>}
         </Card>
       </div>
 

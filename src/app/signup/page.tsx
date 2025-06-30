@@ -30,11 +30,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-foreground text-[black] flex-column">
+    <div className="min-h-screen bg-[#FFF5F5] text-[black] flex flex-col overflow-hidden">
       <Header />
-      <main className="min-h-screen bg-[#FFF5F5] flex items-center justify-center h-auto mt-[70px] overflow-y-hidden">
-        <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex">
-          <div className="w-1/2 relative hidden md:block">
+      <main className="flex-1 bg-[#FFF5F5] flex items-center justify-center p-4 pt-[90px] overflow-hidden">
+        <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-120px)]">
+          <div className="w-1/2 relative hidden md:block overflow-hidden">
             <Image
               src={signupImage}
               alt="Indian thali"
@@ -46,7 +46,7 @@ export default function Home() {
               priority
             />
           </div>
-          <div className="w-full md:w-1/2 p-8 md:p-12">
+          <div className="w-full md:w-1/2 p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
             <SignupForm isLoading={isLoading} />
           </div>
         </div>

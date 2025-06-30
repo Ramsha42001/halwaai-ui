@@ -263,16 +263,16 @@ function History() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="text-xl md:text-2xl font-semibold">Order History</h1>
+          <h1 className="text-xl md:text-2xl font-semibold">Order Summary</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Input
+          {/* <Input
             type="search"
             placeholder="Search..."
             className="max-w-[120px] md:max-w-xs hidden md:block"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          /> */}
           <Sheet>
             <SheetTitle className="text-transparent">
               Category
@@ -282,7 +282,7 @@ function History() {
                 <Menu className="h-5 w-5 " />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[200px] sm:w-[300px]">
+            {/* <SheetContent side="right" className="w-[200px] sm:w-[300px]">
               <div className="flex flex-col gap-4 mt-6">
                 <Button
                   variant={activeTab === 'all' ? 'default' : 'ghost'}
@@ -313,7 +313,7 @@ function History() {
                   Cancelled
                 </Button>
               </div>
-            </SheetContent>
+            </SheetContent> */}
           </Sheet>
         </div>
       </div>
@@ -327,14 +327,14 @@ function History() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 bg-[black] rounded-sm hidden md:block">
+        {/* <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 bg-[black] rounded-sm hidden md:block">
           <TabsList className="grid w-full grid-cols-4 bg-[black] ">
             <TabsTrigger value="all">All Orders</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
             <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
           </TabsList>
-        </Tabs>
+        </Tabs> */}
 
         <div className="space-y-4">
           {/* Show current cart as pending order if there are items */}
@@ -367,9 +367,6 @@ function History() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem asChild>
                       <Link href="/user/cart">Edit Cart</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleClearCart}>
-                      Clear Cart
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

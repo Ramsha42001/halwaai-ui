@@ -172,11 +172,24 @@ function PredefinedThaalis() {
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       {/* Header Section - Fixed styling */}
-      <h1 className="text-3xl md:text-3xl lg:text-4xl font-bold text-gray-900 py-[90px] text-center">
-        Special Thalis Preview
-      </h1>
+      <div className="bg-[#fff5f5] shadow-sm border-b mb-[20px]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+              Special Thalis Preview
+            </h1>
+            <Button
+              onClick={() => setIsAddThaliForm(true)}
+              className="bg-black hover:bg-gray-800 text-white flex items-center gap-2 px-6 py-2 rounded-lg transition-colors duration-200"
+            >
+              <Plus className="h-4 w-4" />
+              Add Thali
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Main Content */}
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pb-[100px] bg-[#fff5f5]">
@@ -339,7 +352,7 @@ function PredefinedThaalis() {
                                   ...prev.menuItems,
                                   {
                                     name: item.name,
-                                    image: item.imageUrl || '',
+                                    image: item.image,
                                     price: item.price,
                                     description: item.description,
                                     quantity: 1,
@@ -579,7 +592,7 @@ function PredefinedThaalis() {
                                   ...prev.menuItems,
                                   {
                                     name: item.name,
-                                    image: item.imageUrl || '',
+                                    image: item.image,
                                     price: item.price,
                                     description: item.description,
                                     quantity: 1,

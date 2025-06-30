@@ -44,6 +44,22 @@ export default function Home() {
             const user = userCredential.user;
             console.log("Firebase login successful:", user);
 
+            // Extract and store first name from email
+            if (user.email) {
+                const emailPrefix = user.email.split('@')[0];
+                // If email prefix contains dots or underscores, take the first part
+                const firstName = emailPrefix.split(/[._]/)[0];
+                // Capitalize first letter
+                const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+
+                // Store the formatted name and login timestamp
+                storageService.setUsername(formattedName);
+                storageService.setItem('last_login_time', Date.now().toString());
+
+                // Clear any previous modal shown flag to allow showing welcome modal
+                storageService.removeItem('welcome_modal_shown');
+            }
+
             // Check if user is admin
             if (user.email && isAdminUser(user.email)) {
                 console.log("Admin user detected, redirecting to admin panel");
@@ -89,20 +105,20 @@ export default function Home() {
     }
 
     return (
-        <div className="min-h-screen bg-foreground text-[black] flex-column">
+        <div className="min-h-screen bg-foreground text-[black] flex flex-col overflow-hidden">
             <Header />
-            <main className="min-h-screen bg-foreground flex items-center justify-center p-4 mt-[70px]">
-                <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex">
-                    <div className="w-1/2 relative hidden md:block">
+            <main className="flex-1 bg-foreground flex items-center justify-center p-4 pt-[90px] overflow-hidden">
+                <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-120px)]">
+                    <div className="w-1/2 relative hidden md:block overflow-hidden">
                         <img
                             src={loginImage.src}
                             alt="Indian thali"
                             className="w-full h-full object-cover"
                         />
                     </div>
-                    <div className="w-full md:w-1/2 p-8 md:p-12">
+                    <div className="w-full md:w-1/2 p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
                                 {error}
                             </div>
                         )}
