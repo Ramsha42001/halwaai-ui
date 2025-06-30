@@ -41,6 +41,13 @@ export default function AdminNav() {
         >
           <span className="text-xs text-center">Users</span>
         </Link>
+        <Link
+          href="/admin/orderDetails"
+          className={`flex flex-col items-center space-y-1 w-1/3 p-2 ${pathname === '/admin/predefinedThaalis' ? 'text-primary' : 'text-white'
+            }`}
+        >
+          <span className="text-xs text-center">Orders</span>
+        </Link>
       </div>
     </nav>
   )

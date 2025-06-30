@@ -11,7 +11,8 @@ const headerItems = [
   "Update Menu Items",
   "Update Predefined Thalis",
   "Update Modal",
-  "Users"
+  "Users",
+  "Orders"
 ];
 
 export default function SubHeader() {
@@ -33,6 +34,8 @@ export default function SubHeader() {
       case "/admin/users":
         setActiveCategory("Users");
         break;
+      case "/admin/orderDetails":
+        setActiveCategory("Orders")
       default:  // Or handle other cases as needed. You might set a default active category here
         setActiveCategory("");
     }
@@ -50,6 +53,9 @@ export default function SubHeader() {
     }
     else if (category === "Users") {
       router.push("/admin/users");
+    }
+    else if (category === "Orders") {
+      router.push("/admin/orderDetails")
     }
 
   };
