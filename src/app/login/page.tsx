@@ -14,10 +14,10 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
 
     return (
-        <div className="min-h-screen bg-foreground text-[black] flex flex-col overflow-hidden">
+        <div className="min-h-screen bg-foreground text-[black]  flex flex-col overflow-hidden">
             <Header />
-            <main className="flex-1 bg-foreground flex items-center justify-center p-2 sm:p-4 pt-[70px] sm:pt-[90px] overflow-hidden">
-                <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-100px)] sm:max-h-[calc(100vh-120px)]">
+            <main className="flex-1 bg-foreground flex items-center p-4 pt-0 md:pt-[70px] justify-center overflow-hidden">
+                <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-100px)]">
                     <div className="w-1/2 relative hidden md:block overflow-hidden">
                         <img
                             src={loginImage.src}
