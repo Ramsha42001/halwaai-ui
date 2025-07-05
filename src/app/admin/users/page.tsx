@@ -34,7 +34,7 @@ const UserPage: React.FC = () => {
             try {
                 const response = await authService.getAllUsers();
                 console.log(response)
-                setUsers(response); // Assuming response contains the user data
+                setUsers(response);
             } catch (err) {
                 setError('Failed to fetch users');
             } finally {
@@ -42,8 +42,8 @@ const UserPage: React.FC = () => {
             }
         };
 
-        fetchUsers(); // Call the async function
-    }, []); // Empty dependency array to run once on mount
+        fetchUsers();
+    }, []);
 
     const toggleAccordion = (userId: string) => {
         setExpandedUserId(expandedUserId === userId ? null : userId);

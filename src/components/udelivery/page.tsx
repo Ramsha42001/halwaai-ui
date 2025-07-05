@@ -27,30 +27,30 @@ export default function Home() {
         </div>
         <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full sm:w-auto">
           <Link
-          href={localStorage.getItem('authToken') ? '/user' : '/login'}
+            href={'/login'}
           >
-          <Button className="w-full sm:w-auto bg-black text-white hover:bg-white/90">
-            Customize your Thali
-          </Button>
+            <Button className="w-full sm:w-auto bg-black text-white hover:bg-white/90">
+              Customize your Thali
+            </Button>
           </Link>
           <Link
-          href={localStorage.getItem('authToken') ? '/user/thali' : '/login'}
+            href={localStorage.getItem('authToken') ? '/user/thali' : '/login'}
           >
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto bg-accent text-black hover:bg-white/90 border-black"
-          >
-            Order Predefined Thali
-          </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto bg-accent text-black hover:bg-white/90 border-black"
+            >
+              Order Predefined Thali
+            </Button>
           </Link>
         </div>
       </div>
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center mt-8 lg:mt-0">
         <h2 className="text-3xl sm:text-4xl font-poorStory mb-4">Delivery Area</h2>
         <div className="relative w-full max-w-md aspect-square">
-          <Image 
-            src="/images/deliveryArea.png" 
-            alt="deliveryArea" 
+          <Image
+            src="/images/deliveryArea.png"
+            alt="deliveryArea"
             layout="fill"
             objectFit="contain"
           />
