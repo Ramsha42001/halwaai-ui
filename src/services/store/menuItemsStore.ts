@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { ref, set as firebaseSet, update, onValue, off, push } from 'firebase/database';
+import { ref, set as firebaseSet, update, onValue, off, push, get, get as firebaseGet } from 'firebase/database';
 import { database } from '@/lib/firebase';
+import { menuItems } from '@/data/menu-items';
 
 interface MenuItem {
   _id: string
@@ -119,7 +120,7 @@ interface StoreState {
   setRequiredCategories: (requiredCategories: RequiredCategory[]) => void;
   setSelectedAddress: (userId: string | null, address: Address) => void;
   setDeliverySchedule: (userId: string | null, schedule: DeliverySchedule) => void;
-  addCustomThaliToCart: (userId: string | null, thaliName: string) => void;
+  addCustomThaliToCart: (userId: string | null, thaliName: string, items: MenuItem[]) => void;
   addSpecialThaliToCart: (userId: string | null, specialThali: SpecialThali) => void;
   updateCartItemQuantity: (userId: string | null, itemIndex: number, quantity: number) => void;
   changeOrderStatus: (userId: string | null, status: string) => void;
@@ -139,13 +140,11 @@ function calculateOrderTotal(price: number, quantity: number) {
 
 function updateThaliProgress(
   requiredCategories: RequiredCategory[],
-  itemCategoryId: string
+  selectedItems: MenuItem[]
 ): { updatedCategories: RequiredCategory[]; progress: number } {
   const updatedCategories = requiredCategories.map(cat => {
-    if (cat._id === itemCategoryId && !cat.selectedForThali) {
-      return { ...cat, selectedForThali: true };
-    }
-    return cat;
+    const hasItem = selectedItems.some(item => item.category._id === cat._id && item.quantity > 0);
+    return { ...cat, selectedForThali: hasItem };
   });
 
   const selectedCount = updatedCategories.filter(cat => cat.selectedForThali).length;
@@ -154,6 +153,14 @@ function updateThaliProgress(
     : 0;
 
   return { updatedCategories, progress };
+}
+
+async function fetchSelectedItemsFromFirebase(userId: string | null) {
+  if (!userId) return [];
+  const userRef = ref(database, `inventories/${userId}/menuItems`);
+  const snapshot = await get(userRef);
+  const data = snapshot.val();
+  return data ? Object.values(data) as MenuItem[] : [];
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -252,9 +259,14 @@ export const useStore = create<StoreState>((set, get) => ({
         updatedItem = { ...item, quantity: 1 };
       }
 
+      const updatedItems = [
+        ...state.selectedItems.filter(i => i._id !== item._id),
+        updatedItem
+      ].filter(i => i.quantity > 0);
+
       const { updatedCategories, progress } = updateThaliProgress(
         state.requiredCategories,
-        item.category._id
+        updatedItems
       );
 
       const thaliProgressRef = ref(database, `inventories/${userId}/thaliProgress`);
@@ -262,9 +274,6 @@ export const useStore = create<StoreState>((set, get) => ({
 
       const itemRef = ref(database, `inventories/${userId}/menuItems/${item._id}`);
       await firebaseSet(itemRef, updatedItem);
-
-      const updatedItems = state.selectedItems.filter(i => i._id !== item._id);
-      updatedItems.push(updatedItem);
 
       const orderTotal = updatedItems.reduce((sum, item) => {
         return sum + (item.price * item.quantity);
@@ -291,21 +300,34 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const state = get();
       const existing = state.selectedItems.find(i => i._id === item._id);
-      if (!existing) {
-        set({ loading: false });
-        return;
+      let updatedItem: MenuItem;
+      if (existing) {
+        if (existing.quantity === 1) {
+          updatedItem = { ...item, quantity: 0 };
+        }
+        else {
+          updatedItem = { ...existing, quantity: existing.quantity - 1 };
+        }
       }
-      const itemRef = ref(database, `inventories/${userId}/menuItems/${item._id}`);
-      let updatedItems: MenuItem[];
+      else {
+        updatedItem = { ...item, quantity: 0 };
+      }
 
-      if (existing.quantity > 1) {
-        const updatedItem = { ...existing, quantity: existing.quantity - 1 };
-        await firebaseSet(itemRef, updatedItem);
-        updatedItems = state.selectedItems.map(i => i._id === item._id ? updatedItem : i);
-      } else {
-        await firebaseSet(itemRef, null);
-        updatedItems = state.selectedItems.filter(i => i._id !== item._id);
-      }
+      const updatedItems = [
+        ...state.selectedItems.filter(i => i._id !== item._id),
+        updatedItem
+      ].filter(i => i.quantity > 0);
+
+      const { updatedCategories, progress } = updateThaliProgress(
+        state.requiredCategories,
+        updatedItems
+      );
+
+      const thaliProgressRef = ref(database, `inventories/${userId}/thaliProgress`);
+      await firebaseSet(thaliProgressRef, progress);
+
+      const itemRef = ref(database, `inventories/${userId}/menuItems/${item._id}`);
+      await firebaseSet(itemRef, updatedItem);
 
       const orderTotal = updatedItems.reduce((sum, item) => {
         return sum + (item.price * item.quantity);
@@ -316,53 +338,55 @@ export const useStore = create<StoreState>((set, get) => ({
 
       set({
         selectedItems: updatedItems,
-        orderTotal: orderTotal,
+        requiredCategories: updatedCategories,
+        thaliProgress: progress,
         loading: false,
+        orderTotal: orderTotal,
         error: null
       });
-    } catch (error: any) {
+    }
+    catch (error: any) {
       set({ error: error.message, loading: false });
     }
   },
 
-  addCustomThaliToCart: async (userId: string | null, thaliName: string) => {
-    if (!userId) {
-      set({ error: 'User ID is required to save to cart' });
-      return;
-    }
-
+  addCustomThaliToCart: async (userId: string | null, thaliName: string, items: MenuItem[]) => {
+    if (!userId) { set({ error: 'User ID is required to save to cart' }); return; }
     set({ loading: true });
     try {
-      const state = get();
+      console.log(userId)
+      console.log(items)
+      const cartRef = ref(database, `inventories/${userId}/cart`);
+      const cartSnap = await firebaseGet(cartRef);
+      const currentCartRaw = cartSnap.val() || {};
+      const cartItems = Array.isArray(currentCartRaw.items) ? currentCartRaw.items : [];
+      const totalAmount = typeof currentCartRaw.totalAmount === "number" ? currentCartRaw.totalAmount : 0;
+      const currentCart = { items: cartItems, totalAmount };
 
-      const thaliPrice = state.selectedItems.reduce((sum, item) => {
-        return sum + (item.price * item.quantity);
-      }, 0);
-
+      const thaliPrice = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const customThali: CustomThali = {
         name: thaliName,
-        menuItems: [...state.selectedItems],
+        menuItems: [...items],
         thaliPrice: thaliPrice,
-        thaliQuantity: state.selectedItems.reduce((sum, item) => sum + item.quantity, 0)
+        thaliQuantity: items.reduce((sum, item) => sum + item.quantity, 0)
       };
-
       const newCartItem: CartItem = {
         type: 'custom',
         thali: customThali,
         cartQuantity: 1
       };
-
       const updatedCart = {
-        items: [...state.cart.items, newCartItem],
-        totalAmount: state.cart.totalAmount + thaliPrice
+        items: [...currentCart.items, newCartItem],
+        totalAmount: currentCart.totalAmount + thaliPrice
       };
 
-      const cartRef = ref(database, `inventories/${userId}/cart`);
-      await firebaseSet(cartRef, updatedCart);
+      console.log("cartRef:", cartRef.toString());
+      console.log("currentCart:", currentCart);
+      console.log("updatedCart:", updatedCart);
 
+      await firebaseSet(cartRef, updatedCart);
       const orderTotalRef = ref(database, `inventories/${userId}/orderTotal`);
       await firebaseSet(orderTotalRef, updatedCart.totalAmount);
-
       set({
         cart: updatedCart,
         orderTotal: updatedCart.totalAmount,
@@ -370,6 +394,7 @@ export const useStore = create<StoreState>((set, get) => ({
         error: null
       });
     } catch (error: any) {
+      console.error("Firebase write error:", error);
       set({
         error: error.message || 'Failed to add to cart',
         loading: false
@@ -675,7 +700,10 @@ export const useStore = create<StoreState>((set, get) => ({
               const deliverySchedule = scheduleSnap.val() as DeliverySchedule | null;
 
               onValue(cartRef, (cartSnap) => {
-                const cart = cartSnap.val() as Cart ?? { items: [], totalAmount: 0 };
+                const currentCartRaw = cartSnap.val() || {};
+                const cartItems = Array.isArray(currentCartRaw.items) ? currentCartRaw.items : [];
+                const totalAmount = typeof currentCartRaw.totalAmount === "number" ? currentCartRaw.totalAmount : 0;
+                const currentCart = { items: cartItems, totalAmount };
 
                 onValue(orderStatusRef, (statusSnap) => {
                   const orderStatusData = statusSnap.val();
@@ -687,7 +715,7 @@ export const useStore = create<StoreState>((set, get) => ({
                     thaliProgress,
                     selectedAddress,
                     deliverySchedule,
-                    cart,
+                    cart: currentCart,
                     orderStatus,
                     loading: false,
                     error: null

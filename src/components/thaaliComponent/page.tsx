@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Plus, Minus, Upload, X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/adminCard/page";
 import { Button } from "../ui/button";
 import Image from "next/image";
@@ -49,7 +49,6 @@ export function ThaliCard({
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
 
-
   const { addSpecialThaliToCart, cart } = useStore();
 
   useEffect(() => {
@@ -58,10 +57,11 @@ export function ThaliCard({
     setUsername(storageService.getUsername());
   }, []);
 
+  console.log(items)
 
   // Check if this thali is already in cart and get its quantity
   useEffect(() => {
-    if (_id && cart) {
+    if (_id && cart && cart.items) {
       const existingItem = cart.items.find(
         item => item.type === 'special' && (item.thali as any)._id === _id
       );
@@ -173,96 +173,208 @@ export function ThaliCard({
 
   return (
     <>
-      <div className="relative w-[90%] sm:w-[350px] min-h-[500px] h-auto mx-auto my-[10px]">
-        <div className="relative w-[250px] h-[250px] mx-auto my-0 bg-[white] rounded-full z-10">
-          <img src={image} alt={image} className="object-cover w-[100%] h-[100%] rounded-full" />
-          {showButton && (
-            <div onClick={openDialog} className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity duration-300 border-rounded rounded-[100%]">
-              <span className="text-white">Upload Image</span>
+      {/* Responsive Container */}
+      <div className="relative w-full mx-auto group">
+        {/* Image Section - Overlapping */}
+        <div className="relative z-10 mb-[-50px] sm:mb-[-60px] md:mb-[-70px]">
+          <div className="relative w-[200px] sm:w-[220px] md:w-[240px] h-[200px] sm:h-[220px] md:h-[240px] mx-auto">
+            <div className="w-full h-full bg-white rounded-full shadow-lg overflow-hidden border-2 border-white">
+              <img
+                src={image}
+                alt={title}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+
+              {/* Minimal Upload Overlay */}
+              {showButton && (
+                <div
+                  onClick={openDialog}
+                  className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 cursor-pointer backdrop-blur-sm"
+                >
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        <Card style={{ height: `calc(100% - 125px)`, width: '100%', paddingTop: '130px', paddingLeft: '10px', paddingRight: '10px', paddingBottom: '10px' }} className="absolute bottom-0 left-0 bg-[#997864] text-white border-none h-auto">
-          <CardHeader className="flex flex-row justify-between items-start">
-            <h2 className="text-2xl font-semibold">{title}</h2>
-            <p className="text-sm opacity-90">₹{price}</p>
-          </CardHeader>
-          <CardContent className="space-y-2 flex-grow">
-            {items.map((item, idx) => (
-              <div key={item._id} className="flex items-center gap-3 flex-row justify-between">
-                <span className="text-sm">{item.name}</span>
-                <span className="text-sm">{item.quantity}</span>
+        {/* Card Content - Minimal Design with Flexbox Layout */}
+        <Card className="bg-[#997864] min-h-[450px] text-white border-none shadow-lg hover:shadow-xl transition-shadow duration-300 pt-[60px] sm:pt-[70px] md:pt-[80px] flex flex-col">
+          {/* Header */}
+          <CardHeader className="pb-3 flex-shrink-0">
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg sm:text-xl font-semibold text-white truncate mb-1">
+                  {title}
+                </h3>
+                <p className="text-white/80 text-sm leading-relaxed line-clamp-2">
+                  {description}
+                </p>
               </div>
-            ))}
+              <div className="flex-shrink-0">
+                <div className="text-right">
+                  <p className="text-xl sm:text-2xl font-bold text-white">₹{price}</p>
+                  <p className="text-xs text-white/70">Total</p>
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+
+          {/* Menu Items - Clean List with flex-grow */}
+          <CardContent className="py-3 flex-grow">
+            <h4 className="text-sm font-medium text-white/90 mb-3">Includes:</h4>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {items.map((item, idx) => (
+                <div
+                  key={item._id}
+                  className="flex justify-between items-center py-1 text-sm"
+                >
+                  <span className="text-white/90 truncate mr-2">{item.name}</span>
+                  <span className="text-white font-medium flex-shrink-0">×{item.quantity}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
-          {showButton && quantity <= 0 ? (
-            <div className="flex flex-row justify-right mx-[10px]">
-              <Button
-                className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
-                onClick={onClick}
-              >
-                Edit Thali
-              </Button>
-              <Button
-                className="mt-4 bg-black hover:bg-gray-800 flex items-center"
-                onClick={onDelete}
-              >
-                Delete Thali
-              </Button>
-            </div>
-          ) : quantity == 0 && authToken ? (
-            <div className="absolute bottom-2 right-2 flex items-center">
-              <Button
-                className="mt-4 bg-black hover:bg-gray-800 flex items-center mx-[10px]"
-                onClick={handleAddThaliToCart}
-                disabled={isAddingToCart}
-              >
-                {isAddingToCart ? 'Adding...' : 'Add Thali'}
-              </Button>
-            </div>
-          ) : authToken ? (
-            <div className="absolute bottom-2 right-2 flex items-center">
-              <Button
-                className="bg-black hover:bg-gray-800 text-white"
-                onClick={increaseQuantity}
-                disabled={isAddingToCart}
-              >
-                +
-              </Button>
-              <span className="mx-2 text-white">{quantity}</span>
-              <Button
-                className="bg-black hover:bg-gray-800 text-white"
-                onClick={decreaseQuantity}
-              >
-                -
-              </Button>
-            </div>
-          ) : <></>}
+
+          {/* Action Buttons - Fixed at Bottom */}
+          <div className="p-4 pt-2 flex-shrink-0 mt-auto">
+            {/* Admin Buttons Row - Only show if showButton is true */}
+            {showButton && (
+              <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                <Button
+                  className="flex-1 bg-black/30 hover:bg-black/50 text-white border border-white/20 transition-colors duration-200"
+                  onClick={onClick}
+                  size="sm"
+                >
+                  <Pencil className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  className="flex-1 bg-red-600/80 hover:bg-red-600 text-white transition-colors duration-200"
+                  onClick={onDelete}
+                  size="sm"
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            )}
+
+            {/* Cart Action Buttons - Always visible when authenticated */}
+            {authToken && (
+              <>
+                {quantity === 0 ? (
+                  <Button
+                    className="w-full bg-black/30 hover:bg-black/50 text-white border border-white/20 transition-colors duration-200"
+                    onClick={handleAddThaliToCart}
+                    disabled={isAddingToCart}
+                  >
+                    {isAddingToCart ? (
+                      <>
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add to Cart
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <Button
+                      className="w-8 h-8 p-0 bg-red-600/80 hover:bg-red-600 text-white rounded-full transition-colors duration-200"
+                      onClick={decreaseQuantity}
+                      disabled={isAddingToCart}
+                    >
+                      <Minus className="w-3 h-3" />
+                    </Button>
+
+                    <span className="text-lg font-semibold text-white min-w-[2rem] text-center">
+                      {quantity}
+                    </span>
+
+                    <Button
+                      className="w-8 h-8 p-0 bg-green-600/80 hover:bg-green-600 text-white rounded-full transition-colors duration-200"
+                      onClick={increaseQuantity}
+                      disabled={isAddingToCart}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </Card>
       </div>
 
+      {/* Minimal Upload Dialog */}
       {isDialogOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]">
-          <div className="bg-white p-4 rounded">
-            <h2 className="text-lg font-semibold text-black">Upload or update Image</h2>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="mt-2 text-black"
-            />
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleImageUpload} className="bg-blue-500 text-white">
-                Upload
-              </Button>
-              <Button onClick={closeDialog} className="ml-2 bg-gray-300">
-                Cancel
-              </Button>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Upload Image</h3>
+              <button
+                onClick={closeDialog}
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#997864] transition-colors duration-200">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer text-[#997864] text-sm font-medium hover:text-[#8b6f5c] transition-colors duration-200"
+                >
+                  Choose file
+                </label>
+                {selectedImage && (
+                  <p className="text-xs text-gray-600 mt-1 truncate">
+                    {selectedImage.name}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={closeDialog}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-900 border-0"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleImageUpload}
+                  className="flex-1 bg-[#997864] hover:bg-[#8b6f5c] text-white"
+                  disabled={!selectedImage}
+                >
+                  Upload
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </>
   );
 }

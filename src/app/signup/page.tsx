@@ -30,10 +30,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF5F5] text-[black] flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 text-black flex flex-col overflow-hidden">
       <Header />
-      <main className="flex-1 bg-[#FFF5F5] flex items-center justify-center p-4 pt-[90px] overflow-hidden">
-        <div className="w-full max-w-[1000px] bg-white rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-120px)]">
+      <main className="flex-1 flex items-center justify-center pt-[90px] overflow-hidden">
+        <div className="w-full max-w-[350px] sm:max-w-sm md:max-w-[900px] lg:max-w-[1000px] bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl flex max-h-[calc(100vh-120px)]">
+          {/* Image Section - Hidden on mobile, visible on larger screens */}
           <div className="w-1/2 relative hidden md:block overflow-hidden">
             <Image
               src={signupImage}
@@ -42,12 +43,23 @@ export default function Home() {
               loading="eager"
               fill
               style={{ objectFit: "cover" }}
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 0vw, 50vw"
               priority
             />
+            {/* Overlay for better text contrast if needed */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
           </div>
-          <div className="w-full md:w-1/2 p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto">
-            <SignupForm isLoading={isLoading} />
+
+          {/* Form Section */}
+          <div className="w-full md:w-1/2 flex flex-col">
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 sm:p-6 md:p-8 lg:p-12 min-h-full flex items-center">
+                <div className="w-full">
+                  <SignupForm />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -57,13 +57,13 @@ export default function MenuItemCard({
       formDataToSend.append('name', formData.name);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('price', formData.price.toString());
-      
+
       if (selectedImage) {
         formDataToSend.append('image', selectedImage);
       }
 
       const response = await menuItemService.updateMenuItem(id, formDataToSend);
-      
+
       if (response) {
         setIsEditFormOpen(false);
         if (onUpdate) onUpdate();
@@ -80,9 +80,9 @@ export default function MenuItemCard({
     try {
       setIsDeleting(true);
       setError("");
-      
+
       const response = await menuItemService.deleteMenuItem(id);
-      
+
       if (response) {
         toast.success("Menu item deleted successfully");
         if (onUpdate) {
@@ -109,10 +109,10 @@ export default function MenuItemCard({
         <div className="flex justify-between items-center">
           <span className="text-lg md:text-2xl font-bold">₹{price}</span>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setIsEditFormOpen(true)} 
-              size="icon" 
-              variant="outline" 
+            <Button
+              onClick={() => setIsEditFormOpen(true)}
+              size="icon"
+              variant="outline"
               className="h-8 w-8"
               disabled={isDeleting}
             >
@@ -149,11 +149,11 @@ export default function MenuItemCard({
                   <Label className="text-black" htmlFor="name">
                     Name
                   </Label>
-                  <Input 
-                    id="name" 
+                  <Input
+                    id="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Enter name of the item" 
+                    placeholder="Enter name of the item"
                   />
                 </div>
 
@@ -161,12 +161,12 @@ export default function MenuItemCard({
                   <Label className="text-black" htmlFor="price">
                     Price(₹)
                   </Label>
-                  <Input 
-                    id="price" 
-                    type="number" 
+                  <Input
+                    id="price"
+                    type="number"
                     value={formData.price}
                     onChange={handleInputChange}
-                    placeholder="Enter price" 
+                    placeholder="Enter price"
                   />
                 </div>
 

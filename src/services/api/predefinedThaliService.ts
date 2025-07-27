@@ -8,6 +8,7 @@ const predefinedThaliService = {
 
     createPredefinedThali: async (formData: any) => {
         try {
+            console.log(formData)
             const response = await apiClient.post('/admin/collections/predefinedthaalis', formData, {
                 headers: {
                     'Content-Type': 'application/json',

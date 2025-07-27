@@ -17,11 +17,12 @@ interface FoodCardProps {
   id: string;
   thaliquantity: number;
   items: Item[];
+  updateCartQuantity: (cartIndex: number, newQuantity: number) => void;
+  removeFromCart: (cartIndex: number) => void;
 }
 
-export default function FoodCard({ heading, items, id, thaliquantity }: FoodCardProps) {
-  const [quantity, setQuantity] = useState<number>(1);
-  // const { orderTotal, setOrderTotal } = useStore();
+export default function FoodCard({ heading, items, id, thaliquantity, updateCartQuantity, removeFromCart }: FoodCardProps) {
+  // Remove local quantity state, use thaliquantity from props
 
   const calculateTotalPrice = () => {
     const total = items.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -32,17 +33,18 @@ export default function FoodCard({ heading, items, id, thaliquantity }: FoodCard
     const total = calculateTotalPrice();
   }, [items]); // Recalculate when items change
 
-  const increaseQuantity = async () => {
-    setQuantity((prev) => prev + 1);
-    await cartService.updateTotalPrice(id, quantity + 1); // Update with the new quantity
+  const increaseQuantity = () => {
+    updateCartQuantity(Number(id.split('-')[1]), thaliquantity + 1);
   };
 
-  const decreaseQuantity = async () => {
-    setQuantity((prev) => {
-      const newQuantity = prev > 1 ? prev - 1 : prev;
-      cartService.updateTotalPrice(id, newQuantity); // Update with the new quantity
-      return newQuantity;
-    });
+  const decreaseQuantity = () => {
+    if (thaliquantity > 1) {
+      updateCartQuantity(Number(id.split('-')[1]), thaliquantity - 1);
+    }
+  };
+
+  const handleRemove = () => {
+    removeFromCart(Number(id.split('-')[1]));
   };
 
   return (
@@ -67,7 +69,7 @@ export default function FoodCard({ heading, items, id, thaliquantity }: FoodCard
           >
             <Plus className="h-4 w-4" />
           </Button>
-          <Button variant="destructive" size="icon" className="h-8 w-8 ml-2">
+          <Button variant="destructive" size="icon" className="h-8 w-8 ml-2" onClick={handleRemove}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>

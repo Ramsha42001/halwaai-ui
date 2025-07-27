@@ -18,6 +18,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { menuItemService } from '@/services/api/menuItemService';
 import modalService from "@/services/api/modalService";
 import { storageService, STORAGE_KEYS } from "@/utils/storage";
+import { CartPopup } from '@/components/cartPopup/page';
 
 // Enhanced Login Modal Component
 const LoginModal = ({ modal, isOpen, onClose }: {
@@ -264,6 +265,7 @@ function HomeContent() {
       <NgoPage />
       <Contact />
       <Footer />
+
 
       {/* Login Modal */}
       {loginModalData && (

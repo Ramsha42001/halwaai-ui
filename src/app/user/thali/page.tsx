@@ -12,6 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import withAuth from "@/utils/withAuth";
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
+import { MenuItemCardSkeleton } from '@/components/menuItemCard/page';
+import { ref, get } from 'firebase/database';
+import { database } from '@/lib/firebase';
+import { CartPopup } from "@/components/cartPopup/page";
+import { storageService } from "@/utils/storage";
 
 interface MenuItem {
   _id: string
@@ -35,9 +41,20 @@ function Thali() {
   const [dialog, setdialog] = useState(false);
   const [thaliName, setThaliName] = useState('');
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null)
+
 
   const { selectedItems, subscribe, unsubscribe, orderTotal, addCustomThaliToCart, clearSelectedItems } = useStore();
-  const user = localStorage.getItem('authToken')
+
+
+  useEffect(() => {
+    setAuthToken(storageService.getAuthToken());
+  }, []);
+
+  console.log(authToken)
+  const user = authToken;
 
   useEffect(() => {
     if (user) {
@@ -51,9 +68,18 @@ function Thali() {
   }
 
   useEffect(() => {
-    menuItemService.getMenuItems().then((response) => {
-      setMenuItems(response)
-    })
+    setLoading(true);
+    setError(null);
+    menuItemService.getMenuItems()
+      .then((response) => {
+        setMenuItems(response);
+      })
+      .catch(() => {
+        setError('Failed to fetch menu items');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [])
 
   const handleAddToCart = async () => {
@@ -64,22 +90,14 @@ function Thali() {
 
     setIsAddingToCart(true);
     try {
-      const userId = localStorage.getItem('authToken');
-
-      // Add custom thali to cart using the store function
-      await addCustomThaliToCart(userId, thaliName);
-
-      // Clear selected items after adding to cart
+      const userId = user;
+      const userRef = ref(database, `inventories/${userId}/menuItems`);
+      const snapshot = await get(userRef);
+      const items = snapshot.val() ? Object.values(snapshot.val()) as MenuItem[] : [];
+      await addCustomThaliToCart(userId, thaliName, items);
       await clearSelectedItems(userId);
-
-      // Close dialog
       setdialog(false);
-
-      // Show success message or redirect
       alert('Thali added to cart successfully!');
-
-      // Optionally redirect to cart page
-      // router.push('/user/cart');
     } catch (error) {
       console.error('Error adding to cart:', error);
       alert('Failed to add thali to cart');
@@ -93,6 +111,8 @@ function Thali() {
     ...item,
     butter: item.hasButter,
   }));
+
+  const storeLoading = useStore((state) => state.loading);
 
   return (
     <div className="flex flex-col min-h-screen mt-[70px] text-[black] pb-[40%] sm:pb-[40%] lg:pb-[5%]">
@@ -121,56 +141,71 @@ function Thali() {
 
           {/* Menu Items */}
           <div className="w-full lg:w-[60%]">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredSelectedMenuItems.map((item) => (
-                <div
-                  key={item._id}
-                  className="p-4 border-[2px] border-[black] rounded-md bg-[white] h-auto"
-                >
-                  <div className="flex flex-row w-full justify-between items-start">
-                    <h5 className="font-bold text-lg">{item.name}</h5>
-                    <h5 className="font-bold text-lg">₹{item.price}</h5>
-                  </div>
-                  <p className="font-medium text-sm mt-2 text-gray-600">{item.description}</p>
-                  <p className="font-medium text-sm mt-2 text-gray-600">Quantity: {item.quantity}</p>
-                  {item.butter ? <p className="font-medium text-sm mt-2 text-gray-600">With Butter</p> : null}
-                </div>
-              ))}
-            </div>
+            {(loading || storeLoading) ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <MenuItemCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-red-500 text-center py-8">{error}</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredSelectedMenuItems.length === 0 ? (
+                  <div className="col-span-2 text-center text-gray-500 py-8">No items selected for your thali.</div>
+                ) : (
+                  filteredSelectedMenuItems.map((item) => (
+                    <div
+                      key={item._id}
+                      className="p-4 border-[2px] border-[black] rounded-md bg-[white] h-auto"
+                    >
+                      <div className="flex flex-row w-full justify-between items-start">
+                        <h5 className="font-bold text-lg">{item.name}</h5>
+                        <h5 className="font-bold text-lg">₹{item.price}</h5>
+                      </div>
+                      <p className="font-medium text-sm mt-2 text-gray-600">{item.description}</p>
+                      <p className="font-medium text-sm mt-2 text-gray-600">Quantity: {item.quantity}</p>
+                      {item.butter ? <p className="font-medium text-sm mt-2 text-gray-600">With Butter</p> : null}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Order Total and Action Buttons */}
-      <div className="fixed bottom-[70px] sm:bottom-[70px] lg:bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4">
+
+      {selectedItems.length !== 0 && (<div className="fixed bottom-[70px] sm:bottom-[70px] lg:bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4">
         <div className="container mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="border-2 border-black rounded-md px-4 py-2 w-full sm:w-auto text-center">
               <span className="font-bold text-[black]">Order Total: ₹{orderTotal}</span>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              {selectedItems.length !== 0 ? <><Button
+
+              <Button
                 className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-2 w-full sm:w-auto"
                 onClick={handleOpenThaliNameDialog}
+                disabled={isAddingToCart}
               >
-                Add to Cart
-              </Button></> : <><Link href='/user/cart'><Button
-                className="bg-yellow-400 hover:bg-yellow-500 text-black px-8 py-2 w-full sm:w-auto"
-              >
-                Go to Cart
-              </Button></Link></>}
-              {/* <Link href="/user/address">
-                <Button
-                  className="bg-black hover:bg-gray-800 text-white px-8 py-2 w-full sm:w-auto"
-                  disabled={selectedItems.length === 0}
-                >
-                  Proceed to checkout
-                </Button>
-              </Link> */}
+                {isAddingToCart ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-2 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Adding...
+                  </span>
+                ) : (
+                  'Add to Cart'
+                )}
+              </Button>
             </div>
           </div>
         </div>
-      </div>
+      </div>)}
 
       <CustomPopup
         isOpen={dialog}
@@ -184,7 +219,15 @@ function Thali() {
               onClick={handleAddToCart}
               disabled={isAddingToCart || !thaliName.trim()}
             >
-              {isAddingToCart ? 'Adding...' : 'Submit'}
+              {isAddingToCart ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  </svg>
+                  Adding...
+                </span>
+              ) : 'Submit'}
             </Button>
           </div>
         }
@@ -199,7 +242,9 @@ function Thali() {
           />
         </div>
       </CustomPopup>
+      <CartPopup />
     </div>
+
   );
 }
 
