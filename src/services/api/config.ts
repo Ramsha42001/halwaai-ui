@@ -1,5 +1,5 @@
-// export const API_URL = 'https://halwaai-server-410805250566.us-central1.run.app';
-export const API_URL = 'http://localhost:3000'
+export const API_URL = 'https://halwaai-server-410805250566.us-central1.run.app';
+// export const API_URL = 'http://localhost:3000'
 import axios from 'axios';
 
 
