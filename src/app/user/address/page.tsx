@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, MapPin, Plus, User, Phone, Mail, Home, CheckCircle } from 'lucide-react';
 import { addressService } from '@/services/api/addressService';
 import withAuth from '@/utils/withAuth';
-import { useStore } from '@/services/store/menuItemsStore'; // Update this import path
-
+import { useStore } from '@/services/store/menuItemsStore';
+import { Badge } from '@/components/ui/badge';
+import { motion, AnimatePresence } from 'framer-motion';
+import { storageService } from '@/utils/storage';
 
 interface Address {
   firstName: string;
@@ -43,15 +45,21 @@ function Address() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState<number | null>(null);
   const [addressSelect, setAddressSelect] = useState(false);
-
-  // Get userId from your auth context/hook
-  const userId = localStorage.getItem('authToken') // Update based on your auth implementation
+  const [submitting, setSubmitting] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
 
   // Get setSelectedAddress from store
   const { setSelectedAddress, selectedAddress } = useStore();
 
+  useEffect(() => {
+    setAuthToken(storageService.getAuthToken());
+  }, []);
+
+  const userId = authToken;
+
   const handleSubmit = async () => {
     try {
+      setSubmitting(true);
       await addressService.createAddress(formData);
       console.log('Address created successfully:', formData);
       // Refresh addresses after creating new one
@@ -72,6 +80,8 @@ function Address() {
       setOpenForm(false);
     } catch (error) {
       console.error('Error creating address:', error);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -123,236 +133,369 @@ function Address() {
   };
 
   useEffect(() => {
-    getAddress();
-  }, []);
+    if (userId) {
+      getAddress();
+    }
+  }, [userId]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" }
+    }
+  };
 
   return (
-    <>
-      <div className="min-h-[100vh] h-auto bg-[#FFF5F5] text-[black] px-4 pb-20 md:px-6 lg:px-8">
-        <div className="py-[90px] md:pt-[70px]">
-          <Link href="/user/thali">
-            <Button variant="default" className="bg-black hover:text-[black] mb-4 md:m-[30px]">
-              <ChevronLeft /> Back
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 pb-[120px] sm:pb-[100px] lg:pb-[80px]">
+      <div className="pt-[90px] px-3 sm:px-4 lg:px-8">
+        {/* Header */}
+        <motion.div
+          className="flex items-center justify-between mb-6 sm:mb-8"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.6 }}
+        >
+          <Link href="/user/cart">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-black hover:bg-gray-800 border-amber-200 text-white hover:text-white shadow-md px-3 sm:px-4"
+            >
+              <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Back to Cart</span>
+              <span className="sm:hidden">Back</span>
             </Button>
           </Link>
 
-          <div className="w-full mx-auto">
-            <h2 className="font-poorStory font-semibold text-2xl md:text-3xl text-[black] py-3 md:py-[20px] text-center">
-              Address
-            </h2>
+          <div className="text-center flex-1 mx-2 sm:mx-4">
+            <h1 className="font-poorStory font-bold text-xl sm:text-2xl md:text-3xl bg-background bg-clip-text text-transparent">
+              Delivery Address
+            </h1>
+            <p className="text-background font-poppins text-xs sm:text-sm mt-1">
+              Choose or add your delivery location
+            </p>
+          </div>
 
-            <div className="w-full min-h-[80vh] flex flex-col md:flex-row gap-4 md:gap-8 justify-between items-start">
-              <div className="w-full md:w-[40%] flex justify-center items-start mb-6 md:mb-0 hidden md:flex">
-                <img
-                  src="/images/thali1.png"
-                  alt="Thali"
-                  className="rounded-lg w-full max-w-[300px] md:max-w-[400px] object-cover"
-                />
+          <div className="w-16 sm:w-20" />
+        </motion.div>
+
+        <div className="container mx-auto">
+          <motion.div
+            className="flex flex-col lg:flex-row gap-6 lg:gap-8 justify-between items-start"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {/* Thali Image - Desktop Only */}
+            <motion.div
+              className="hidden lg:flex w-full lg:w-[35%] justify-center items-start"
+              variants={itemVariants}
+            >
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-amber-200/50">
+                <div className="aspect-square relative rounded-xl overflow-hidden mb-4">
+                  <img
+                    src="/images/thali1.png"
+                    alt="Traditional Thali"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+                <div className="text-center">
+                  <h3 className="font-semibold text-amber-800 font-poorStory">Your Order</h3>
+                  <p className="text-amber-600 text-sm font-poppins">Ready for delivery</p>
+                </div>
               </div>
+            </motion.div>
 
-              <div className="w-full md:w-[50%] md:mr-[5%]" >
+            {/* Address Section */}
+            <motion.div
+              className="w-full lg:w-[60%]"
+              variants={itemVariants}
+            >
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 shadow-xl border border-amber-200/50">
                 {loading ? (
-                  <div className="mb-8 p-4 bg-gray-50 rounded-lg shadow-sm">
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin h-5 w-5 mr-3 border-2 border-black border-t-transparent rounded-full"></div>
-                      <p>Loading your saved addresses...</p>
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="animate-spin h-8 w-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+                      <p className="text-amber-700 font-poppins">Loading your saved addresses...</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="mb-8">
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto p-2 border-rounded bg-[white]">
-                      {addresses.map((address, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start p-4 border rounded-lg cursor-pointer transition-duration-300 hover:bg-gray-50 border-gray-200 shadow-sm"
-                          onClick={() => handleAddressSelection(index)}
-                        >
-                          <input
-                            type="radio"
-                            name="address"
-                            className="mt-1 h-4 w-4 accent-black cursor-pointer"
-                            checked={selectedAddressIndex === index}
-                            onChange={() => handleAddressSelection(index)}
-                          />
-                          <div className="ml-4">
-                            <p className="font-medium">{address.firstName} {address.lastName}</p>
-                            <p className="text-sm text-gray-600">{address.addressLine1}</p>
-                            {address.addressLine2 && <p className="text-sm text-gray-600">{address.addressLine2}</p>}
-                            <p className="text-sm text-gray-600">{address.city}, {address.state} {address.zipCode}</p>
-                            <p className="text-sm text-gray-600">{address.country}</p>
-                            <p className="text-sm text-gray-600 mt-1">Phone: {address.phone}</p>
-                            <p className="text-sm text-gray-600">Email: {address.email}</p>
-                          </div>
-                        </div>
-                      ))}
+                  <div>
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="w-5 h-5 text-amber-500" />
+                        <h2 className="font-semibold text-black text-lg">Saved Addresses</h2>
+                      </div>
+                      <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        {addresses.length} saved
+                      </Badge>
                     </div>
 
-                    <div className="m-5 flex flex-col md:flex-row justify-between">
+                    {/* Address List */}
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto mb-6">
+                      <AnimatePresence>
+                        {addresses.map((address, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: index * 0.1 }}
+                            className={`relative cursor-pointer transition-all duration-300 rounded-xl border-2 p-4 ${selectedAddressIndex === index
+                              ? 'border-amber-400 bg-gradient-to-r from-amber-50 to-orange-50 shadow-md'
+                              : 'border-amber-200/50 bg-white/70 hover:border-amber-300 hover:shadow-sm'
+                              }`}
+                            onClick={() => handleAddressSelection(index)}
+                          >
+                            {/* Selection Indicator */}
+                            <div className="absolute top-3 right-3">
+                              {selectedAddressIndex === index ? (
+                                <CheckCircle className="w-5 h-5 text-amber-600" />
+                              ) : (
+                                <div className="w-5 h-5 border-2 border-amber-300 rounded-full"></div>
+                              )}
+                            </div>
+
+                            {/* Address Content */}
+                            <div className="pr-8">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <User className="w-4 h-4 text-amber-600" />
+                                <p className="font-semibold text-black">{address.firstName} {address.lastName}</p>
+                              </div>
+
+                              <div className="flex items-start space-x-2 mb-2">
+                                <Home className="w-4 h-4 text-amber-600 mt-0.5" />
+                                <div className="text-sm text-black">
+                                  <p>{address.addressLine1}</p>
+                                  {address.addressLine2 && <p>{address.addressLine2}</p>}
+                                  <p>{address.city}, {address.state} {address.zipCode}</p>
+                                  <p>{address.country}</p>
+                                </div>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row sm:space-x-6 space-y-1 sm:space-y-0">
+                                <div className="flex items-center space-x-2">
+                                  <Phone className="w-3 h-3 text-amber-600" />
+                                  <p className="text-xs text-black">{address.phone}</p>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <Mail className="w-3 h-3 text-amber-600" />
+                                  <p className="text-xs text-black">{address.email}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+
+                      {addresses.length === 0 && !loading && (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <MapPin className="w-8 h-8 text-amber-500" />
+                          </div>
+                          <h3 className="font-semibold text-amber-800 mb-2">No addresses saved</h3>
+                          <p className="text-amber-600 text-sm">Add your first delivery address to continue</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                       {!openForm ? (
                         <>
-                          <button
+                          <Button
                             onClick={() => setOpenForm(true)}
-                            className="w-[250px] my-[10px] py-2 px-4 bg-[black] text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
+                            className="bg-black hover:bg-gray-800 text-white shadow-lg flex-1"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                            </svg>
-                            Add a New Address
-                          </button>
-                          <Link href="/user/orderTime">
-                            <button
-                              className="w-[250px] py-2 px-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300 flex items-center justify-center gap-2"
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add New Address
+                          </Button>
+                          <Link href="/user/orderTime" className="flex-1">
+                            <Button
+                              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-emerald-600 hover:to-green-700 text-white shadow-lg"
                               disabled={!addressSelect}
                             >
-                              Next
-                            </button>
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Continue to Payment
+                            </Button>
                           </Link>
                         </>
                       ) : (
-                        <div className="bg-white p-6 rounded-lg shadow-md">
-                          <h3 className="text-xl font-semibold mb-4">Add New Address</h3>
-                          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                                <input
-                                  type="text"
-                                  value={formData.firstName}
-                                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                                <input
-                                  type="text"
-                                  value={formData.lastName}
-                                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                            </div>
+                        <div className="w-full">
+                          <AnimatePresence>
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-6"
+                            >
+                              <h3 className="text-lg font-semibold text-amber-800 mb-4 font-poorStory">Add New Address</h3>
+                              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">First Name</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.firstName}
+                                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">Last Name</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.lastName}
+                                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                </div>
 
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 1</label>
-                              <input
-                                type="text"
-                                value={formData.addressLine1}
-                                onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                required
-                              />
-                            </div>
+                                <div>
+                                  <Label className="text-amber-800 font-medium text-sm">Address Line 1</Label>
+                                  <Input
+                                    type="text"
+                                    value={formData.addressLine1}
+                                    onChange={(e) => setFormData({ ...formData, addressLine1: e.target.value })}
+                                    className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                    required
+                                  />
+                                </div>
 
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Address Line 2 (Optional)</label>
-                              <input
-                                type="text"
-                                value={formData.addressLine2}
-                                onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                              />
-                            </div>
+                                <div>
+                                  <Label className="text-amber-800 font-medium text-sm">Address Line 2 (Optional)</Label>
+                                  <Input
+                                    type="text"
+                                    value={formData.addressLine2}
+                                    onChange={(e) => setFormData({ ...formData, addressLine2: e.target.value })}
+                                    className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                  />
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                                <input
-                                  type="text"
-                                  value={formData.city}
-                                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                                <input
-                                  type="text"
-                                  value={formData.state}
-                                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                            </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">City</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.city}
+                                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">State</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.state}
+                                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">ZIP Code</label>
-                                <input
-                                  type="text"
-                                  value={formData.zipCode}
-                                  onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                                <input
-                                  type="text"
-                                  value={formData.country}
-                                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                            </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">ZIP Code</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.zipCode}
+                                      onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">Country</Label>
+                                    <Input
+                                      type="text"
+                                      value={formData.country}
+                                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                                <input
-                                  type="tel"
-                                  value={formData.phone}
-                                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                <input
-                                  type="email"
-                                  value={formData.email}
-                                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black"
-                                  required
-                                />
-                              </div>
-                            </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">Phone Number</Label>
+                                    <Input
+                                      type="tel"
+                                      value={formData.phone}
+                                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-amber-800 font-medium text-sm">Email</Label>
+                                    <Input
+                                      type="email"
+                                      value={formData.email}
+                                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                      className="border-amber-200 focus:ring-amber-500 focus:border-amber-500 mt-1"
+                                      required
+                                    />
+                                  </div>
+                                </div>
 
-                            <div className="flex justify-end space-x-4 mt-6">
-                              <button
-                                type="button"
-                                onClick={() => setOpenForm(false)}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors duration-300"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                type="submit"
-                                className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 transition-colors duration-300"
-                              >
-                                Save Address
-                              </button>
-                            </div>
-                          </form>
+                                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 mt-6">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setOpenForm(false)}
+                                    className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                                    disabled={submitting}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    type="submit"
+                                    className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-lg"
+                                    disabled={submitting}
+                                  >
+                                    {submitting ? (
+                                      <span className="flex items-center">
+                                        <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                                        Saving...
+                                      </span>
+                                    ) : (
+                                      'Save Address'
+                                    )}
+                                  </Button>
+                                </div>
+                              </form>
+                            </motion.div>
+                          </AnimatePresence>
                         </div>
                       )}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
-
       </div>
-    </>
+    </div>
   );
 }
 

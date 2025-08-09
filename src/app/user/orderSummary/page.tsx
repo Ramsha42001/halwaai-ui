@@ -360,7 +360,7 @@ function OrderSummary() {
 
     // List view for all orders
     return (
-        <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
+        <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px] ">
             {/* Header */}
             <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b z-30">
                 <div className="flex items-center gap-4">

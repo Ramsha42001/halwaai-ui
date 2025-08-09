@@ -1,9 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useStore } from '@/services/store/menuItemsStore' // Adjust path as needed
+import { useStore } from '@/services/store/menuItemsStore'
 import withAuth from "@/utils/withAuth"
 import { useRouter } from 'next/navigation'
+import { Button } from "@/components/ui/button"
+import { ChevronLeft, Clock, Calendar, CheckCircle, MapPin } from 'lucide-react'
+import Link from "next/link"
+import { Badge } from '@/components/ui/badge'
+import { motion, AnimatePresence } from 'framer-motion'
+import { storageService } from '@/utils/storage'
 
 interface TimeClockProps {
     selectedTime: string
@@ -43,7 +49,6 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
         const [hours, mins] = time24.split(':').map(Number)
 
         if (deliveryType === 'express') {
-            // Express: next 4 hours from now
             const now = new Date()
             const selectedDateTime = new Date()
             selectedDateTime.setHours(hours, mins, 0, 0)
@@ -51,7 +56,6 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
             const maxTime = new Date(now.getTime() + 4 * 60 * 60 * 1000)
             return selectedDateTime > now && selectedDateTime <= maxTime
         } else {
-            // Standard: 9 AM to 9 PM
             return hours >= 9 && hours <= 21
         }
     }
@@ -85,7 +89,7 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
     const generateHourPositions = () => {
         const hours = []
         for (let i = 1; i <= 12; i++) {
-            const angle = (i * 30 - 90) * (Math.PI / 180) // -90 to start at 12 o'clock
+            const angle = (i * 30 - 90) * (Math.PI / 180)
             const x = 50 + 35 * Math.cos(angle)
             const y = 50 + 35 * Math.sin(angle)
             const isAvailable = isTimeAvailable(i, selectedMinute, isAM)
@@ -104,7 +108,7 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
     // Generate minute marks
     const generateMinutePositions = () => {
         const minutes = []
-        for (let i = 0; i < 60; i += 5) { // Every 5 minutes
+        for (let i = 0; i < 60; i += 5) {
             const angle = (i * 6 - 90) * (Math.PI / 180)
             const x = 50 + 42 * Math.cos(angle)
             const y = 50 + 42 * Math.sin(angle)
@@ -132,45 +136,46 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
         <div className="flex flex-col items-center space-y-6">
             {/* Digital Time Display */}
             <div className="text-center">
-                <div className="text-3xl font-bold text-gray-800 mb-2">
+                <div className="text-2xl sm:text-3xl font-bold text-amber-800 mb-2 font-poorStory">
                     {selectedHour.toString().padStart(2, '0')}:{selectedMinute.toString().padStart(2, '0')} {isAM ? 'AM' : 'PM'}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-xs sm:text-sm text-amber-600 font-poppins">
                     {deliveryType === 'express' ? 'Express Delivery (Next 4 hours)' : 'Standard Delivery (9 AM - 9 PM)'}
                 </div>
             </div>
 
             {/* Clock */}
             <div className="relative">
-                <svg width="300" height="300" className="drop-shadow-lg">
+                <svg width="250" height="250" className="sm:w-[300px] sm:h-[300px] drop-shadow-lg">
                     {/* Clock face */}
                     <circle
-                        cx="150"
-                        cy="150"
-                        r="140"
+                        cx="125"
+                        cy="125"
+                        r="115"
                         fill="white"
-                        stroke="#e5e7eb"
+                        stroke="#f59e0b"
                         strokeWidth="2"
+                        className="sm:cx-[150] sm:cy-[150] sm:r-[140]"
                     />
 
                     {/* Hour markers */}
                     {hourPositions.map((hour) => (
                         <g key={`hour-${hour.number}`}>
                             <circle
-                                cx={hour.x * 3}
-                                cy={hour.y * 3}
-                                r="16"
-                                fill={hour.isSelected ? '#000000' : hour.isAvailable ? '#f3f4f6' : '#e5e7eb'}
-                                stroke={hour.isSelected ? '#000000' : hour.isAvailable ? '#9ca3af' : '#d1d5db'}
+                                cx={hour.x * 2.5}
+                                cy={hour.y * 2.5}
+                                r="14"
+                                fill={hour.isSelected ? '#d97706' : hour.isAvailable ? '#fef3c7' : '#f3f4f6'}
+                                stroke={hour.isSelected ? '#d97706' : hour.isAvailable ? '#f59e0b' : '#d1d5db'}
                                 strokeWidth="2"
-                                className={hour.isAvailable ? 'cursor-pointer hover:fill-gray-300' : 'cursor-not-allowed'}
+                                className={`${hour.isAvailable ? 'cursor-pointer hover:fill-amber-200' : 'cursor-not-allowed'} sm:cx-[${hour.x * 3}] sm:cy-[${hour.y * 3}] sm:r-[16]`}
                                 onClick={() => hour.isAvailable && handleHourChange(hour.number)}
                             />
                             <text
-                                x={hour.x * 3}
-                                y={hour.y * 3 + 5}
+                                x={hour.x * 2.5}
+                                y={hour.y * 2.5 + 4}
                                 textAnchor="middle"
-                                className={`text-sm font-medium ${hour.isSelected ? 'fill-white' : hour.isAvailable ? 'fill-gray-700' : 'fill-gray-400'} ${hour.isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                className={`text-xs sm:text-sm font-medium ${hour.isSelected ? 'fill-white' : hour.isAvailable ? 'fill-amber-800' : 'fill-gray-400'} ${hour.isAvailable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                                 onClick={() => hour.isAvailable && handleHourChange(hour.number)}
                             >
                                 {hour.number}
@@ -182,11 +187,11 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
                     {minutePositions.map((minute) => (
                         <circle
                             key={`minute-${minute.number}`}
-                            cx={minute.x * 3}
-                            cy={minute.y * 3}
-                            r="6"
-                            fill={minute.isSelected ? '#000000' : minute.isAvailable ? '#9ca3af' : '#d1d5db'}
-                            className={minute.isAvailable ? 'cursor-pointer hover:fill-gray-600' : 'cursor-not-allowed'}
+                            cx={minute.x * 2.5}
+                            cy={minute.y * 2.5}
+                            r="5"
+                            fill={minute.isSelected ? '#d97706' : minute.isAvailable ? '#f59e0b' : '#d1d5db'}
+                            className={`${minute.isAvailable ? 'cursor-pointer hover:fill-amber-600' : 'cursor-not-allowed'}`}
                             onClick={() => minute.isAvailable && handleMinuteChange(minute.number)}
                         />
                     ))}
@@ -196,47 +201,47 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
                         <>
                             {/* Hour hand */}
                             <line
-                                x1="150"
-                                y1="150"
-                                x2={150 + 60 * Math.cos(hourAngle * Math.PI / 180)}
-                                y2={150 + 60 * Math.sin(hourAngle * Math.PI / 180)}
-                                stroke="#000000"
+                                x1="125"
+                                y1="125"
+                                x2={125 + 50 * Math.cos(hourAngle * Math.PI / 180)}
+                                y2={125 + 50 * Math.sin(hourAngle * Math.PI / 180)}
+                                stroke="#d97706"
                                 strokeWidth="4"
                                 strokeLinecap="round"
                             />
                             {/* Minute hand */}
                             <line
-                                x1="150"
-                                y1="150"
-                                x2={150 + 90 * Math.cos(minuteAngle * Math.PI / 180)}
-                                y2={150 + 90 * Math.sin(minuteAngle * Math.PI / 180)}
-                                stroke="#000000"
+                                x1="125"
+                                y1="125"
+                                x2={125 + 75 * Math.cos(minuteAngle * Math.PI / 180)}
+                                y2={125 + 75 * Math.sin(minuteAngle * Math.PI / 180)}
+                                stroke="#d97706"
                                 strokeWidth="2"
                                 strokeLinecap="round"
                             />
                             {/* Center dot */}
-                            <circle cx="150" cy="150" r="6" fill="#000000" />
+                            <circle cx="125" cy="125" r="6" fill="#d97706" />
                         </>
                     )}
                 </svg>
             </div>
 
             {/* AM/PM Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-amber-100 rounded-lg p-1">
                 <button
                     onClick={() => handleAMPMChange('AM')}
-                    className={`px-6 py-2 rounded-md font-medium transition-all duration-200 ${isAM
-                        ? 'bg-black text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-800'
+                    className={`px-4 sm:px-6 py-2 rounded-md font-medium transition-all duration-200 text-sm sm:text-base ${isAM
+                        ? 'bg-amber-600 text-white shadow-md'
+                        : 'text-amber-700 hover:text-amber-800'
                         }`}
                 >
                     AM
                 </button>
                 <button
                     onClick={() => handleAMPMChange('PM')}
-                    className={`px-6 py-2 rounded-md font-medium transition-all duration-200 ${!isAM
-                        ? 'bg-black text-white shadow-md'
-                        : 'text-gray-600 hover:text-gray-800'
+                    className={`px-4 sm:px-6 py-2 rounded-md font-medium transition-all duration-200 text-sm sm:text-base ${!isAM
+                        ? 'bg-amber-600 text-white shadow-md'
+                        : 'text-amber-700 hover:text-amber-800'
                         }`}
                 >
                     PM
@@ -244,13 +249,13 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
             </div>
 
             {/* Quick time buttons for common delivery times */}
-            <div className="grid grid-cols-3 gap-2 text-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
                 {deliveryType === 'standard' ? (
                     ['09:00', '12:00', '15:00', '18:00', '21:00'].map((time) => (
                         <button
                             key={time}
                             onClick={() => onTimeChange(time)}
-                            className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                            className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition-colors"
                         >
                             {new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
                                 hour: 'numeric',
@@ -260,7 +265,6 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
                         </button>
                     ))
                 ) : (
-                    // Express delivery quick times (next few hours)
                     Array.from({ length: 4 }, (_, i) => {
                         const time = new Date(Date.now() + (i + 1) * 60 * 60 * 1000)
                         const timeString = `${time.getHours().toString().padStart(2, '0')}:00`
@@ -268,7 +272,7 @@ const TimeClock = ({ selectedTime, onTimeChange, deliveryType }: TimeClockProps)
                             <button
                                 key={timeString}
                                 onClick={() => onTimeChange(timeString)}
-                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors"
+                                className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg transition-colors"
                             >
                                 {time.toLocaleTimeString('en-US', {
                                     hour: 'numeric',
@@ -287,11 +291,17 @@ function OrderTime() {
     const [selectedDate, setSelectedDate] = useState('')
     const [selectedTime, setSelectedTime] = useState('')
     const [deliveryType, setDeliveryType] = useState<'standard' | 'express'>('standard')
+    const [authToken, setAuthToken] = useState<string | null>(null)
 
     // Get store state and actions
     const { deliverySchedule, setDeliverySchedule, loading } = useStore()
-    const user = localStorage.getItem('authToken')
     const router = useRouter()
+
+    useEffect(() => {
+        setAuthToken(storageService.getAuthToken())
+    }, [])
+
+    const user = authToken
 
     // Load existing delivery schedule on component mount
     useEffect(() => {
@@ -325,7 +335,6 @@ function OrderTime() {
 
     const handleDeliveryTypeChange = (type: 'standard' | 'express') => {
         setDeliveryType(type)
-        // Reset selected time when delivery type changes
         setSelectedTime('')
     }
 
@@ -336,10 +345,8 @@ function OrderTime() {
     const handleConfirm = async () => {
         if (selectedDate && selectedTime && user) {
             const availableDates = getAvailableDates()
-
             const dateLabel = availableDates.find(d => d.value === selectedDate)?.label || selectedDate
 
-            // Format time label
             const [hours, minutes] = selectedTime.split(':').map(Number)
             const timeObj = new Date()
             timeObj.setHours(hours, minutes, 0, 0)
@@ -361,7 +368,6 @@ function OrderTime() {
                 await setDeliverySchedule(user, scheduleData)
                 alert(`Delivery scheduled for ${dateLabel} at ${timeLabel}`)
                 router.push('/user/payment')
-
             } catch (error) {
                 alert('Failed to save delivery schedule. Please try again.')
             }
@@ -372,83 +378,116 @@ function OrderTime() {
 
     const availableDates = getAvailableDates()
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    }
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: {
+            y: 0,
+            opacity: 1,
+            transition: { duration: 0.5, ease: "easeOut" }
+        }
+    }
+
     return (
-        <div className="min-h-screen from-blue-50 via-white to-purple-50 pb-[70px]">
-            <div className="pt-[100px] pb-8 px-4">
-                <div className="max-w-4xl mx-auto">
-                    {/* Header */}
-                    <div className="text-center mb-12">
-                        <h1 className="font-poorStory font-bold text-4xl md:text-5xl text-gray-800 mb-4">
-                            Schedule Your Delivery
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 pb-[120px] sm:pb-[100px] lg:pb-[80px]">
+            <div className="pt-[90px] px-3 sm:px-4 lg:px-8">
+                {/* Header */}
+                <motion.div
+                    className="flex items-center justify-between mb-6 sm:mb-8"
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <Link href="/user/address">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-black hover:bg-gray-800  text-white hover:text-white shadow-md px-3 sm:px-4"
+                        >
+                            <ChevronLeft className="mr-1 sm:mr-2 h-4 w-4" />
+                            <span className="hidden sm:inline">Back to Address</span>
+                            <span className="sm:hidden">Back</span>
+                        </Button>
+                    </Link>
+
+                    <div className="text-center flex-1 mx-2 sm:mx-4">
+                        <h1 className="font-poorStory font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl bg-black bg-clip-text text-transparent">
+                            Schedule Delivery
                         </h1>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Choose your preferred delivery date and time. We'll make sure your order arrives exactly when you need it.
+                        <p className="text-black font-poppins text-xs sm:text-sm mt-1">
+                            Choose your preferred delivery date and time
                         </p>
                     </div>
 
-                    <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+                    <div className="w-16 sm:w-20" />
+                </motion.div>
 
-                        {/* Delivery Type Selection */}
-                        {/* <div className="p-8 border-b border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Delivery Type</h2>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => handleDeliveryTypeChange('standard')}
-                                    className={`flex-1 p-4 rounded-xl border-2 transition-all duration-300 ${deliveryType === 'standard'
-                                        ? 'border-black bg-black text-white'
-                                        : 'border-gray-200 hover:border-black hover:bg-black hover:text-white'
-                                        }`}
-                                >
-                                    <div className="font-semibold">Standard Delivery</div>
-                                    <div className="text-sm opacity-75 mt-1">Next day delivery</div>
-                                </button>
-                                <button
-                                    onClick={() => handleDeliveryTypeChange('express')}
-                                    className={`flex-1 p-4 rounded-xl border-2 transition-all duration-300 ${deliveryType === 'express'
-                                        ? 'border-black bg-black text-white'
-                                        : 'border-gray-200 hover:border-black hover:bg-black hover:text-white'
-                                        }`}
-                                >
-                                    <div className="font-semibold">Express Delivery</div>
-                                    <div className="text-sm opacity-75 mt-1">Same day delivery</div>
-                                </button>
-                            </div>
-                        </div> */}
-
+                <div className="container mx-auto max-w-4xl">
+                    <motion.div
+                        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200/50 overflow-hidden"
+                        variants={containerVariants}
+                        initial="hidden"
+                        animate="visible"
+                    >
                         {/* Date Selection */}
-                        <div className="p-8 border-b border-gray-100">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Select Date</h2>
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                        <motion.div
+                            className="p-4 sm:p-6 lg:p-8 border-b border-amber-100"
+                            variants={itemVariants}
+                        >
+                            <div className="flex items-center space-x-2 mb-4 sm:mb-6">
+                                <Calendar className="w-5 h-5 text-amber-500" />
+                                <h2 className="text-lg sm:text-xl font-semibold text-black font-poorStory">Select Date</h2>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
                                 {availableDates.map((date) => (
-                                    <div
+                                    <motion.div
                                         key={date.value}
-                                        className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center ${selectedDate === date.value
-                                            ? 'border-black bg-black text-white shadow-lg transform scale-105'
-                                            : 'border-gray-200 hover:border-black hover:bg-black hover:text-white hover:shadow-md'
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className={`relative p-3 sm:p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 text-center ${selectedDate === date.value
+                                            ? 'border-amber-500 bg-amber-500 text-white shadow-lg'
+                                            : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50 hover:shadow-md'
                                             }`}
                                         onClick={() => setSelectedDate(date.value)}
                                     >
-                                        <div className={`font-medium text-sm mb-1 ${selectedDate === date.value ? 'text-white' : 'text-black'}`}>
+                                        <div className={`font-medium text-xs sm:text-sm mb-1 ${selectedDate === date.value ? 'text-white' : 'text-amber-800'
+                                            }`}>
                                             {date.label.split(',')[0]}
                                         </div>
-                                        <div className={`text-xs opacity-75 ${selectedDate === date.value ? 'text-white' : 'text-black'}`}>
+                                        <div className={`text-xs opacity-75 ${selectedDate === date.value ? 'text-white' : 'text-amber-600'
+                                            }`}>
                                             {date.label.split(',')[1]?.trim()}
                                         </div>
                                         {date.isToday && (
                                             <div className="absolute -top-2 -right-2">
-                                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                                <Badge className="bg-red-500 text-white text-xs">
                                                     Tomorrow
-                                                </span>
+                                                </Badge>
                                             </div>
                                         )}
-                                    </div>
+                                    </motion.div>
                                 ))}
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Time Selection with Clock */}
-                        <div className="p-8">
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">Select Time</h2>
+                        <motion.div
+                            className="p-4 sm:p-6 lg:p-8"
+                            variants={itemVariants}
+                        >
+                            <div className="flex items-center justify-center space-x-2 mb-4 sm:mb-6">
+                                <Clock className="w-5 h-5 text-amber-500" />
+                                <h2 className="text-lg sm:text-xl font-semibold text-amber-800 font-poorStory">Select Time</h2>
+                            </div>
                             <div className="flex justify-center">
                                 <TimeClock
                                     selectedTime={selectedTime}
@@ -456,56 +495,71 @@ function OrderTime() {
                                     deliveryType={deliveryType}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Confirmation Section */}
-                        <div className="p-8 bg-gray-50 border-t border-gray-100">
-                            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="text-center md:text-left">
-                                    <h3 className="font-semibold text-lg text-gray-800 mb-2">Delivery Summary</h3>
+                        <motion.div
+                            className="p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-amber-50 to-orange-50 border-t border-amber-100"
+                            variants={itemVariants}
+                        >
+                            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+                                <div className="text-center lg:text-left flex-1">
+                                    {/* <div className="flex items-center justify-center lg:justify-start space-x-2 mb-3">
+                                        <MapPin className="w-5 h-5 text-amber-500" />
+                                        <h3 className="font-semibold text-lg text-amber-800 font-poorStory">Delivery Summary</h3>
+                                    </div> */}
                                     {selectedDate && selectedTime ? (
-                                        <div className="space-y-1">
-                                            <p className="text-gray-600">
-                                                <span className="font-medium">Type:</span> {deliveryType === 'express' ? 'Express' : 'Standard'} Delivery
-                                            </p>
-                                            <p className="text-gray-600">
-                                                <span className="font-medium">Date:</span> {
-                                                    availableDates.find(d => d.value === selectedDate)?.label
-                                                }
-                                            </p>
-                                            <p className="text-gray-600">
-                                                <span className="font-medium">Time:</span> {
-                                                    (() => {
-                                                        const [hours, minutes] = selectedTime.split(':').map(Number)
-                                                        const timeObj = new Date()
-                                                        timeObj.setHours(hours, minutes, 0, 0)
-                                                        return timeObj.toLocaleTimeString('en-US', {
-                                                            hour: 'numeric',
-                                                            minute: '2-digit',
-                                                            hour12: true
-                                                        })
-                                                    })()
-                                                }
-                                            </p>
+                                        <div className="space-y-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+                                                <div className="bg-white/70 rounded-lg p-3 text-center">
+                                                    <p className="text-black text-xs font-medium">Date</p>
+                                                    <p className="text-black font-semibold text-sm">
+                                                        {availableDates.find(d => d.value === selectedDate)?.label}
+                                                    </p>
+                                                </div>
+                                                <div className="bg-white/70 rounded-lg p-3 text-center">
+                                                    <p className="text-black text-xs font-medium">Time</p>
+                                                    <p className="text-black font-semibold">
+                                                        {(() => {
+                                                            const [hours, minutes] = selectedTime.split(':').map(Number)
+                                                            const timeObj = new Date()
+                                                            timeObj.setHours(hours, minutes, 0, 0)
+                                                            return timeObj.toLocaleTimeString('en-US', {
+                                                                hour: 'numeric',
+                                                                minute: '2-digit',
+                                                                hour12: true
+                                                            })
+                                                        })()}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <p className="text-gray-500">Please select date and time</p>
-                                    )}
+                                    ) : <></>}
                                 </div>
 
-                                <button
+                                <Button
                                     onClick={handleConfirm}
                                     disabled={!selectedDate || !selectedTime || loading}
-                                    className={`px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 ${selectedDate && selectedTime && !loading
-                                        ? 'bg-black text-white hover:text-white hover:bg-gray-800 shadow-lg hover:shadow-xl transform hover:scale-105'
+                                    className={`px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-sm sm:text-lg transition-all duration-300 w-full sm:w-auto ${selectedDate && selectedTime && !loading
+                                        ? 'bg-black text-white hover:bg-black shadow-lg hover:shadow-xl'
                                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                         }`}
                                 >
-                                    {loading ? 'Saving...' : 'Confirm Delivery Time'}
-                                </button>
+                                    {loading ? (
+                                        <span className="flex items-center justify-center">
+                                            <div className="animate-spin h-4 w-4 sm:h-5 sm:w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                                            Saving...
+                                        </span>
+                                    ) : (
+                                        <>
+                                            <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                                            Confirm Delivery Time
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </div>
             </div>
         </div>

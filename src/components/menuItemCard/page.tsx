@@ -166,22 +166,19 @@ export function MenuItemCard({
       initial="hidden"
       animate="visible"
       whileHover="hover"
-      className="group"
+      className="group h-full"
     >
-      <Card className={`relative overflow-hidden bg-white/90 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-2xl ${isSelected ? 'ring-2 ring-amber-400 shadow-amber-100' : ''
+      <Card className={`relative overflow-hidden bg-[#997864] border-0 rounded-2xl h-full flex flex-col shadow-xl hover:shadow-2xl transition-shadow duration-300 ${isSelected ? 'ring-2 ring-amber-400 shadow-amber-100' : ''
         }`}>
-        <CardContent className="p-0">
+        <CardContent className="p-0 flex flex-col h-full">
           {/* Image Section */}
-          <div className="relative overflow-hidden">
-            <div className="aspect-[4/3] relative">
+          <div className="relative overflow-hidden flex-shrink-0">
+            <div className="aspect-[5/3] relative">
               <img
                 src={image}
                 alt={name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
               {/* Quantity Badge */}
               <AnimatePresence>
@@ -191,9 +188,9 @@ export function MenuItemCard({
                     initial="hidden"
                     animate="visible"
                     exit="hidden"
-                    className="absolute top-4 right-4 z-20"
+                    className="absolute top-3 right-3 z-20"
                   >
-                    <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg">
+                    <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg font-semibold px-3 py-1">
                       {quantity} added
                     </Badge>
                   </motion.div>
@@ -201,20 +198,20 @@ export function MenuItemCard({
               </AnimatePresence>
 
               {/* Price Badge */}
-              <div className="absolute top-4 left-4 z-20">
-                <Badge variant="secondary" className="bg-white/90 text-gray-800 font-bold">
+              <div className="absolute top-3 left-3 z-20">
+                <Badge variant="secondary" className="bg-white/95 text-gray-800 font-bold text-base px-3 py-1.5 shadow-lg">
                   ₹{price}
                 </Badge>
               </div>
 
               {/* Admin Actions */}
               {isAdminPage && (
-                <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute top-3 right-3 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <Button
                     onClick={() => setIsEditFormOpen(true)}
                     size="icon"
                     variant="secondary"
-                    className="h-8 w-8 bg-white/90 hover:bg-white"
+                    className="h-9 w-9 bg-white/95 hover:bg-white shadow-lg"
                     disabled={isDeleting}
                   >
                     <Pencil className="h-4 w-4" />
@@ -223,7 +220,7 @@ export function MenuItemCard({
                     onClick={() => id && deleteMenuItem(id)}
                     size="icon"
                     variant="destructive"
-                    className="h-8 w-8"
+                    className="h-9 w-9 shadow-lg"
                     disabled={isDeleting}
                   >
                     {isDeleting ? (
@@ -237,27 +234,27 @@ export function MenuItemCard({
 
               {/* Quick Actions Overlay */}
               {!isAdminPage && (
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                  <div className="flex items-center gap-3 bg-white/95 backdrop-blur-sm rounded-full px-4 py-2">
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="flex items-center gap-4 bg-white/95 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:bg-red-100 text-red-600"
+                      className="h-10 w-10 hover:bg-red-100 text-red-600 rounded-full"
                       onClick={onRemove}
                       disabled={quantity === 0}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="h-5 w-5" />
                     </Button>
-                    <span className="font-semibold text-gray-800 min-w-[20px] text-center">
+                    <span className="font-bold text-gray-800 min-w-[24px] text-center text-lg">
                       {quantity}
                     </span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:bg-green-100 text-green-600"
+                      className="h-10 w-10 hover:bg-green-100 text-green-600 rounded-full"
                       onClick={onAdd}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-5 w-5" />
                     </Button>
                   </div>
                 </div>
@@ -266,66 +263,43 @@ export function MenuItemCard({
           </div>
 
           {/* Content Section */}
-          <div className="p-6">
+          <div className="p-6 flex flex-col flex-grow">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-bold text-xl text-gray-800 font-poorStory line-clamp-1 group-hover:text-amber-600 transition-colors duration-300">
+              <h3 className="font-bold text-xl text-white font-poorStory line-clamp-2 leading-tight">
                 {name}
               </h3>
-              {!isAdminPage && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 hover:bg-red-50"
-                  onClick={() => setIsFavorite(!isFavorite)}
-                >
-                  <Heart className={`h-4 w-4 transition-colors duration-300 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'
-                    }`} />
-                </Button>
-              )}
             </div>
 
-            <p className="text-gray-600 text-sm font-poppins line-clamp-2 mb-4 leading-relaxed">
+            <p className="text-white/90 text-sm font-poppins line-clamp-3 mb-6 leading-relaxed flex-grow">
               {description}
             </p>
 
-            {/* Tags/Features */}
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="text-xs">
-                <Star className="w-3 h-3 mr-1 text-yellow-500" />
-                Premium
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                <Clock className="w-3 h-3 mr-1 text-green-500" />
-                Fresh
-              </Badge>
-            </div>
-
             {/* Action Buttons */}
             {!isAdminPage && (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 mt-auto">
                 {quantity === 0 ? (
                   <Button
                     onClick={onAdd}
-                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-orange-500 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl"
+                    className="flex-1 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl py-3 font-semibold"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Thali
                   </Button>
                 ) : (
-                  <div className="flex-1 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl px-4 py-2">
+                  <div className="flex-1 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-xl px-5 py-3 shadow-md">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:bg-red-100 text-red-600"
+                      className="h-8 w-8 hover:bg-red-100 text-red-600 rounded-full"
                       onClick={onRemove}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
-                    <span className="font-bold text-amber-700">{quantity}</span>
+                    <span className="font-bold text-amber-700 text-lg">{quantity}</span>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 hover:bg-green-100 text-green-600"
+                      className="h-8 w-8 hover:bg-green-100 text-green-600 rounded-full"
                       onClick={onAdd}
                     >
                       <Plus className="h-4 w-4" />
@@ -415,14 +389,14 @@ export function MenuItemCard({
 // Enhanced Skeleton for MenuItemCard
 export function MenuItemCardSkeleton() {
   return (
-    <div className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl overflow-hidden h-full">
       <div className="aspect-[4/3] relative">
         <Skeleton className="w-full h-full bg-gray-200" />
         <div className="absolute top-4 left-4">
           <Skeleton className="h-6 w-16 bg-gray-300 rounded-full" />
         </div>
       </div>
-      <div className="p-6 space-y-4">
+      <div className="p-6 space-y-4 flex flex-col flex-grow">
         <div className="flex items-start justify-between">
           <Skeleton className="h-6 w-32 bg-gray-200" />
           <Skeleton className="h-8 w-8 bg-gray-200 rounded-full" />
@@ -433,7 +407,9 @@ export function MenuItemCardSkeleton() {
           <Skeleton className="h-6 w-16 bg-gray-200 rounded-full" />
           <Skeleton className="h-6 w-14 bg-gray-200 rounded-full" />
         </div>
-        <Skeleton className="h-10 w-full bg-gray-200 rounded-xl" />
+        <div className="mt-auto">
+          <Skeleton className="h-10 w-full bg-gray-200 rounded-xl" />
+        </div>
       </div>
     </div>
   )

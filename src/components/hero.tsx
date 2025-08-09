@@ -8,11 +8,14 @@ import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { storageService } from "@/utils/storage";
 import { CartPopup } from './cartPopup/page';
+import { useRouter } from 'next/navigation';
 
 export default function Hero() {
     const [authToken, setAuthToken] = useState<string | null>(null);
     const [isClient, setIsClient] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false); // Changed to boolean
+    const router = useRouter();
 
     // Declare function first
     const handlePredefinedScroll = () => {
@@ -25,7 +28,12 @@ export default function Hero() {
     useEffect(() => {
         setIsClient(true);
         setIsMounted(true);
-        setAuthToken(storageService.getAuthToken());
+        const token = storageService.getAuthToken();
+        setAuthToken(token);
+
+        // Fix the admin check - assuming you have a method to check if user is admin
+        if (token === 'VJDnf0of5QfpDXNgeOXtXYiCC3G3')
+            setIsAdmin(true);
     }, []);
 
     // Enhanced Animation variants
@@ -66,8 +74,7 @@ export default function Hero() {
     };
 
     return (
-        <div className="relative w-full min-h-screen overflow-hidden mt-[70px] lg:mt-0 bg-background">
-
+        <div className={`relative w-full min-h-screen overflow-hidden ${isAdmin ? 'mt-[150px] lg:mt-[70px]' : 'mt-[70px] lg:mt-0'}`}>
 
             {/* Floating Decorative Elements */}
             {/* <div className="absolute top-20 left-10 w-4 h-4 bg-yellow-300/30 rounded-full animate-pulse delay-1000"></div>
@@ -80,6 +87,15 @@ export default function Hero() {
                 initial="hidden"
                 animate="visible"
             >
+                {/* Only show admin dashboard if user is admin */}
+                {isAdmin && (
+                    <div className="flex justify-end items-center p-4 mt-[80px] bg-yellow-300 fixed top-0 left-0 w-[100%] z-50">
+                        <Button onClick={() => router.push('/admin/menuItems')} className="w-auto h-[40px] bg-[white] text-black border border-black rounded-md p-2 mr-[10px]">
+                            <span>Go to dashboard</span>
+                        </Button>
+                    </div>
+                )}
+
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 lg:pt-24">
 
                     {/* Main Hero Section */}

@@ -592,83 +592,181 @@ export const useStore = create<StoreState>((set, get) => ({
     }
   },
 
+  // Updated placeOrder function for your store (menuItemsStore.ts)
+
   placeOrder: async (userId: string | null): Promise<string | null> => {
     if (!userId) {
+      console.error('User ID is required to place order');
       set({ error: 'User ID is required to place order' });
       return null;
     }
 
+    console.log('Starting order placement for user:', userId);
+
     const state = get();
-    if (!state.cart.items.length || !state.selectedAddress || !state.deliverySchedule) {
-      set({ error: 'Cart, address, and delivery schedule are required' });
+    console.log('Current state:', {
+      cartItems: state.cart.items.length,
+      selectedAddress: !!state.selectedAddress,
+      deliverySchedule: !!state.deliverySchedule,
+      orderTotal: state.orderTotal
+    });
+
+    // Validate required data
+    if (!state.cart.items || state.cart.items.length === 0) {
+      console.error('Cart is empty');
+      set({ error: 'Cart is empty' });
+      return null;
+    }
+
+    if (!state.selectedAddress) {
+      console.error('No delivery address selected');
+      set({ error: 'No delivery address selected' });
+      return null;
+    }
+
+    if (!state.deliverySchedule) {
+      console.error('No delivery schedule selected');
+      set({ error: 'No delivery schedule selected' });
       return null;
     }
 
     set({ loading: true });
+
     try {
-      // Change status to processing
+      console.log('Changing order status to processing...');
       await get().changeOrderStatus(userId, 'processing');
 
-      // Transform cart items to order items
-      const orderItems: OrderItem[] = state.cart.items.map(cartItem => ({
-        _id: cartItem.type === 'special' ? (cartItem.thali as SpecialThali)._id : `custom-${Date.now()}`,
-        name: cartItem.thali.name || 'Custom Thali',
-        quantity: cartItem.cartQuantity,
-        price: cartItem.thali.thaliPrice,
-        includedItems: cartItem.thali.menuItems.map(item => `${item.name} (x${item.quantity})`),
-        type: cartItem.type,
-        thaliPrice: cartItem.thali.thaliPrice,
-        cartQuantity: cartItem.cartQuantity
-      }));
+      console.log('Transforming cart items to order items...');
+      // Transform cart items to order items with proper structure
+      const orderItems: OrderItem[] = state.cart.items.map((cartItem, index) => {
+        console.log(`Processing cart item ${index}:`, cartItem);
 
-      // Calculate fees
+        // Handle both custom and special thalis
+        const itemId = cartItem.type === 'special' && (cartItem.thali as SpecialThali)._id
+          ? (cartItem.thali as SpecialThali)._id
+          : `custom-thali-${Date.now()}-${index}`;
+
+        const itemName = cartItem.thali.name || 'Custom Thali';
+
+        // Get included items properly
+        let includedItems: string[] = [];
+        if (cartItem.thali.menuItems && Array.isArray(cartItem.thali.menuItems)) {
+          includedItems = cartItem.thali.menuItems.map(menuItem =>
+            `${menuItem.name} (x${menuItem.quantity})`
+          );
+        }
+
+        return {
+          _id: itemId,
+          name: itemName,
+          quantity: cartItem.cartQuantity,
+          price: cartItem.thali.thaliPrice,
+          includedItems: includedItems,
+          type: cartItem.type,
+          thaliPrice: cartItem.thali.thaliPrice,
+          cartQuantity: cartItem.cartQuantity
+        };
+      });
+
+      console.log('Transformed order items:', orderItems);
+
+      // Calculate totals
       const subtotal = state.cart.totalAmount;
-      const deliveryFee = state.deliverySchedule.deliveryType === 'express' ? 50 : 0;
+      const deliveryFee = 0; // As per your original code, delivery is free
       const total = subtotal + deliveryFee;
 
-      // Create order object
-      const order: Order = {
+      console.log('Order totals:', { subtotal, deliveryFee, total });
+
+      // Create order object with proper structure
+      const orderData: Omit<Order, 'id'> = {
         customerId: userId,
         customer: {
           name: `${state.selectedAddress.firstName} ${state.selectedAddress.lastName}`,
           phone: state.selectedAddress.phone,
           email: state.selectedAddress.email,
-          address: state.selectedAddress
+          address: {
+            firstName: state.selectedAddress.firstName,
+            lastName: state.selectedAddress.lastName,
+            email: state.selectedAddress.email,
+            phone: state.selectedAddress.phone,
+            addressLine1: state.selectedAddress.addressLine1,
+            addressLine2: state.selectedAddress.addressLine2,
+            city: state.selectedAddress.city,
+            state: state.selectedAddress.state,
+            country: state.selectedAddress.country,
+            zipCode: state.selectedAddress.zipCode
+          }
         },
         items: orderItems,
         subtotal,
         deliveryFee,
         total,
-        status: 'approved', // Set to approved after successful payment
+        status: 'pending', // Start with pending, can be updated later
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        deliverySchedule: state.deliverySchedule
+        deliverySchedule: {
+          selectedDate: state.deliverySchedule.selectedDate,
+          selectedTime: state.deliverySchedule.selectedTime,
+          deliveryType: state.deliverySchedule.deliveryType,
+          dateLabel: state.deliverySchedule.dateLabel,
+          timeLabel: state.deliverySchedule.timeLabel
+        }
       };
 
-      // Save order to Firebase
+      console.log('Final order data to be saved:', orderData);
+
+      // Save order to Firebase using push to auto-generate ID
+      console.log('Saving order to Firebase...');
       const ordersRef = ref(database, 'orders');
-      const newOrderRef = push(ordersRef);
-      await firebaseSet(newOrderRef, order);
+      const newOrderRef = await push(ordersRef, orderData);
 
       const orderId = newOrderRef.key;
 
-      // Update order status to completed
-      await get().changeOrderStatus(userId, 'completed');
+      if (!orderId) {
+        throw new Error('Failed to generate order ID');
+      }
+
+      console.log('Order saved successfully with ID:', orderId);
+
+      // Update order status to approved after successful save
+      console.log('Updating order status to approved...');
+      const orderUpdateRef = ref(database, `orders/${orderId}/status`);
+      await firebaseSet(orderUpdateRef, 'approved');
+
+      // Also update the timestamp
+      const timestampRef = ref(database, `orders/${orderId}/updatedAt`);
+      await firebaseSet(timestampRef, new Date().toISOString());
+
+      console.log('Order status updated successfully');
 
       set({
         loading: false,
         error: null
       });
 
+      console.log('Order placement completed successfully with ID:', orderId);
       return orderId;
+
     } catch (error: any) {
-      // Reset to pending if error occurs
-      await get().changeOrderStatus(userId, 'pending');
+      console.error('Error during order placement:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
+      // Reset order status to pending if error occurs
+      try {
+        await get().changeOrderStatus(userId, 'pending');
+      } catch (statusError) {
+        console.error('Error resetting order status:', statusError);
+      }
 
       set({
         error: error.message || 'Failed to place order',
         loading: false
       });
+
       return null;
     }
   },

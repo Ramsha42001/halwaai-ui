@@ -104,6 +104,13 @@ function History() {
   const handlePlaceOrder = async () => {
     try {
       setPlacingOrder(true);
+      console.log('Starting order placement...');
+
+      // Validate user authentication
+      if (!user) {
+        alert("Authentication Required: Please log in to place an order.");
+        return;
+      }
 
       // Check if cart is empty
       if (!cart || cart.items.length === 0) {
@@ -112,42 +119,88 @@ function History() {
       }
 
       // Validate required data
-      if (!selectedAddress || !deliverySchedule) {
-        alert("Missing Information: Please ensure you have selected an address and delivery schedule.");
+      if (!selectedAddress) {
+        alert("Missing Address: Please select a delivery address.");
+        console.error('selectedAddress is missing:', selectedAddress);
         return;
       }
 
-      // Show processing message
-      alert("Processing Order: Your order is being processed...");
+      if (!deliverySchedule) {
+        alert("Missing Schedule: Please select a delivery schedule.");
+        console.error('deliverySchedule is missing:', deliverySchedule);
+        return;
+      }
 
-      // Change status to processing
+      // Log current state for debugging
+      console.log('Order data before placement:', {
+        user,
+        cart: cart?.items,
+        selectedAddress,
+        deliverySchedule,
+        orderTotal,
+        orderStatus
+      });
+
+      // Show processing message
+      console.log('Changing order status to processing...');
       await changeOrderStatus(user, 'processing');
 
-      // Place the order
+      console.log('Calling placeOrder function...');
+      // Place the order - this should save to Firebase
       const orderId = await placeOrder(user);
 
+      console.log('Order placement result:', orderId);
+
       if (orderId) {
-        // Order placed successfully
+        console.log('Order placed successfully with ID:', orderId);
+
+        // Clear cart after successful order
+        console.log('Clearing user data...');
         await clearAllUserData(user);
 
         // Show success message
         alert(`Order Placed Successfully! Your order #${orderId} has been placed and will be delivered as scheduled.`);
+
+        // Store last order ID
         localStorage.setItem('lastOrderId', orderId);
+
+        // Navigate to order summary
         router.push('/user/orderSummary');
-        // Refresh the page to show updated order history
-        setTimeout(() => {
-          window.location.reload();
+
+        // Optional: Refresh order history instead of full page reload
+        setTimeout(async () => {
+          try {
+            const updatedResponse = await orderHistoryService.getOrderHistoryUser(user);
+            if (updatedResponse) {
+              setOrderHistory(updatedResponse);
+            }
+          } catch (error) {
+            console.error('Error refreshing order history:', error);
+            // Fallback to page reload if needed
+            window.location.reload();
+          }
         }, 1000);
       } else {
-        // Handle error
+        console.error('Order placement failed - no order ID returned');
         alert("Order Failed: Failed to place order. Please try again.");
-
         await changeOrderStatus(user, 'pending');
       }
     } catch (error) {
       console.error('Error placing order:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
       alert("Error: An unexpected error occurred. Please try again.");
-      await changeOrderStatus(user, 'pending');
+
+      // Reset order status on error
+      try {
+        await changeOrderStatus(user, 'pending');
+      } catch (statusError) {
+        console.error('Error resetting order status:', statusError);
+      }
     } finally {
       setPlacingOrder(false);
     }
@@ -155,11 +208,18 @@ function History() {
 
   const handleClearCart = async () => {
     try {
+      if (!user) {
+        alert("Authentication Required: Please log in first.");
+        return;
+      }
+
       await clearAllUserData(user);
       alert("Cart Cleared: All items have been removed from your cart.");
+
       // Refresh to update the UI
       window.location.reload();
     } catch (error) {
+      console.error('Error clearing cart:', error);
       alert("Error: Failed to clear cart. Please try again.");
     }
   };
@@ -167,12 +227,13 @@ function History() {
   const handleContactOwner = (orderId: string) => {
     alert("Contact Support: Redirecting to customer support for assistance...");
     // Add your contact logic here
-    // For now, just show the alert
+    console.log('Contacting support for order:', orderId);
   };
 
   const handleDownloadInvoice = async (orderId: string) => {
     try {
       alert("Preparing Download: Your invoice is being generated...");
+      console.log('Downloading invoice for order:', orderId);
 
       // Add your download logic here
       // await downloadInvoice(orderId);
@@ -182,6 +243,7 @@ function History() {
         alert("Download Complete: Invoice has been downloaded successfully.");
       }, 2000);
     } catch (error) {
+      console.error('Error downloading invoice:', error);
       alert("Download Failed: Unable to download invoice. Please try again.");
     }
   };
@@ -266,13 +328,6 @@ function History() {
           <h1 className="text-xl md:text-2xl font-semibold">Order Summary</h1>
         </div>
         <div className="flex items-center gap-2">
-          {/* <Input
-            type="search"
-            placeholder="Search..."
-            className="max-w-[120px] md:max-w-xs hidden md:block"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          /> */}
           <Sheet>
             <SheetTitle className="text-transparent">
               Category
@@ -282,38 +337,6 @@ function History() {
                 <Menu className="h-5 w-5 " />
               </Button>
             </SheetTrigger>
-            {/* <SheetContent side="right" className="w-[200px] sm:w-[300px]">
-              <div className="flex flex-col gap-4 mt-6">
-                <Button
-                  variant={activeTab === 'all' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('all')}
-                  className="w-full justify-start bg-opacity-40"
-                >
-                  All Orders
-                </Button>
-                <Button
-                  variant={activeTab === 'active' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('active')}
-                  className="w-full justify-start bg-opacity-40"
-                >
-                  Active
-                </Button>
-                <Button
-                  variant={activeTab === 'completed' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('completed')}
-                  className="w-full justify-start bg-opacity-40"
-                >
-                  Completed
-                </Button>
-                <Button
-                  variant={activeTab === 'cancelled' ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab('cancelled')}
-                  className="w-full justify-start bg-opacity-40"
-                >
-                  Cancelled
-                </Button>
-              </div>
-            </SheetContent> */}
           </Sheet>
         </div>
       </div>
@@ -326,15 +349,6 @@ function History() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-
-        {/* <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6 bg-[black] rounded-sm hidden md:block">
-          <TabsList className="grid w-full grid-cols-4 bg-[black] ">
-            <TabsTrigger value="all">All Orders</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-          </TabsList>
-        </Tabs> */}
 
         <div className="space-y-4">
           {/* Show current cart as pending order if there are items */}
@@ -448,11 +462,11 @@ function History() {
                           <div className="mt-2">
                             <p className="text-sm font-medium">Items Included:</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-muted-foreground">
-                              {cartItem.thali.menuItems.map((item, itemIndex) => (
+                              {/* {cartItem.thali.map((item, itemIndex) => (
                                 <p key={itemIndex}>
                                   {item.name} (x{item.quantity})
                                 </p>
-                              ))}
+                              ))} */}
                             </div>
                           </div>
                         </div>

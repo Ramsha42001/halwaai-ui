@@ -1,164 +1,444 @@
 'use client'
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { ChevronLeft } from "lucide-react"
-import { useStore } from '@/services/store/menuItemsStore'
-import { orderHistoryService } from "@/services/api/orderHistoryService"
-import withAuth from "@/utils/withAuth"
-import { useEffect } from "react"
+
+import { useState, useEffect } from 'react'
+import { ArrowLeft, CheckCircle, Package, Truck, Clock, XCircle, Eye } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { ref, onValue, off } from 'firebase/database'
+import { database } from '@/lib/firebase'
+import withAuth from '@/utils/withAuth'
+
+interface OrderItem {
+    _id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    includedItems?: string[];
+    type: 'custom' | 'special';
+    thaliPrice: number;
+    cartQuantity: number;
+}
 
 interface Address {
-    userId: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
     addressLine1: string;
-    addressLine2?: string; // Address Line 2 is optional
+    addressLine2?: string;
     city: string;
     state: string;
     country: string;
     zipCode: string;
-    _id?: string;// MongoDB ObjectId - optional when creating, present after retrieval from DB
-    createdAt?: Date;
-    updatedAt?: Date;
 }
-interface order {
-    orderId: string;
-    menuItems: {
-        [category: string]: string; // Assuming Types.ObjectId is represented as a string in the UI
+
+interface DeliverySchedule {
+    selectedDate: string;
+    selectedTime: string;
+    deliveryType: 'standard' | 'express';
+    dateLabel?: string;
+    timeLabel?: string;
+}
+
+interface Order {
+    id?: string;
+    customerId: string;
+    customer: {
+        name: string;
+        phone: string;
+        email: string;
+        address: Address;
     };
-    orderDate: Date;
-    deliveryAddress: Address;
+    items: OrderItem[];
+    subtotal: number;
+    deliveryFee: number;
+    total: number;
+    status: 'pending' | 'approved' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+    createdAt: string;
+    updatedAt: string;
+    deliverySchedule?: DeliverySchedule;
 }
 
-function Payment() {
-    const { orderTotal, subscribe, unsubscribe } = useStore();
+function OrderSummary() {
+    const router = useRouter()
+    const [orders, setOrders] = useState<Order[]>([])
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+    const [viewMode, setViewMode] = useState<'list' | 'detail'>('list')
 
-    const user = localStorage.getItem('authToken')
-
+    const userId = localStorage.getItem('authToken')
 
     useEffect(() => {
-        if (user) {
-            subscribe(user);
-            return () => unsubscribe();
+        if (!userId) {
+            setError('User not authenticated')
+            setLoading(false)
+            return
         }
 
-    }, [user, subscribe, unsubscribe]);
+        // Subscribe to all orders from Firebase
+        const ordersRef = ref(database, 'orders')
 
-    const createOrder = async () => {
-        const payload = {
-            menuItems: {
-                "Appetizers": localStorage.getItem('selectedItem'), // Sample menu item ID
-                "Vegetarian": "67a341f4dc4ddae4885f3efb"  // Sample menu item ID
-            },
-            orderDate: new Date(),
-            deliveryAddress: {
-                addressLine1: "123 Main Street",
-                addressLine2: "Apt 4B",
-                city: "New York",
-                state: "NY",
-                country: "USA",
-                zipCode: "10001"
-            },
-            customerDetails: {
-                name: "John Doe",
-                phoneNumber: "+1234567890",
-                email: "john.doe@example.com"
-            },
-            status: "pending",
-            totalPrice: orderTotal // Using the orderTotal from the store
+        const unsubscribe = onValue(ordersRef, (snapshot) => {
+            const data = snapshot.val()
+            if (data) {
+                // Filter orders for the current user
+                const userOrders = Object.entries(data)
+                    .map(([key, value]: [string, any]) => ({
+                        id: key,
+                        ...value,
+                    }))
+                    .filter((order: Order) => order.customerId === userId)
+                    .sort((a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+                setOrders(userOrders)
+                setError(null)
+            } else {
+                setOrders([])
+            }
+            setLoading(false)
+        }, (error) => {
+            console.error('Error fetching orders:', error)
+            setError('Failed to fetch orders')
+            setLoading(false)
+        })
+
+        // Cleanup subscription
+        return () => {
+            off(ordersRef, 'value')
         }
+    }, [userId])
 
-        const response = await orderHistoryService.createNewOrder(payload);
-        console.log(response)
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'pending':
+                return <Clock className="h-5 w-5" />
+            case 'approved':
+                return <CheckCircle className="h-5 w-5" />
+            case 'preparing':
+                return <Package className="h-5 w-5" />
+            case 'ready':
+            case 'delivered':
+                return <Truck className="h-5 w-5" />
+            case 'cancelled':
+                return <XCircle className="h-5 w-5" />
+            default:
+                return <Clock className="h-5 w-5" />
+        }
     }
 
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+            case 'approved':
+                return 'bg-blue-100 text-blue-800 border-blue-300'
+            case 'preparing':
+                return 'bg-purple-100 text-purple-800 border-purple-300'
+            case 'ready':
+                return 'bg-green-100 text-green-800 border-green-300'
+            case 'delivered':
+                return 'bg-green-100 text-green-800 border-green-300'
+            case 'cancelled':
+                return 'bg-red-100 text-red-800 border-red-300'
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-300'
+        }
+    }
 
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
 
+    const handleOrderClick = (order: Order) => {
+        setSelectedOrder(order)
+        setViewMode('detail')
+    }
+
+    const handleBackToList = () => {
+        setSelectedOrder(null)
+        setViewMode('list')
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+                <div className="container mx-auto p-4 max-w-3xl mt-[70px]">
+                    <div className="flex items-center justify-center min-h-[400px]">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                            <p className="text-muted-foreground">Loading orders...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+                <div className="container mx-auto p-4 max-w-3xl mt-[70px]">
+                    <div className="flex items-center justify-center min-h-[400px]">
+                        <div className="text-center">
+                            <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                            <h2 className="text-xl font-semibold mb-2">Error Loading Orders</h2>
+                            <p className="text-muted-foreground mb-4">{error}</p>
+                            <Link href="/user">
+                                <Button>Go to Menu</Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // Detail view for a specific order
+    if (viewMode === 'detail' && selectedOrder) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+                <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
+                    {/* Header */}
+                    <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b z-30">
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" size="icon" onClick={handleBackToList}>
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                            <h1 className="text-xl md:text-2xl font-semibold">Order Details</h1>
+                        </div>
+                    </div>
+
+                    <div className="mt-[80px] md:mt-[100px] space-y-6">
+                        {/* Order Status */}
+                        <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-lg font-semibold">Order Status</h3>
+                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${getStatusColor(selectedOrder.status)}`}>
+                                        {getStatusIcon(selectedOrder.status)}
+                                        <span className="font-medium capitalize">{selectedOrder.status}</span>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Order ID:</span>
+                                        <span className="font-medium">#{selectedOrder.id}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-muted-foreground">Order Date:</span>
+                                        <span>{formatDate(selectedOrder.createdAt)}</span>
+                                    </div>
+                                    {selectedOrder.deliverySchedule && (
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Delivery Schedule:</span>
+                                            <span>
+                                                {selectedOrder.deliverySchedule.dateLabel} at {selectedOrder.deliverySchedule.timeLabel}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Customer Details */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                                <CardHeader>
+                                    <h3 className="font-semibold">Customer Details</h3>
+                                </CardHeader>
+                                <CardContent className="space-y-2 text-sm">
+                                    <p className="font-medium">{selectedOrder.customer.name}</p>
+                                    <p className="text-muted-foreground">{selectedOrder.customer.phone}</p>
+                                    <p className="text-muted-foreground">{selectedOrder.customer.email}</p>
+                                </CardContent>
+                            </Card>
+
+                            <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                                <CardHeader>
+                                    <h3 className="font-semibold">Delivery Address</h3>
+                                </CardHeader>
+                                <CardContent className="space-y-1 text-sm">
+                                    <p>{selectedOrder.customer.address.addressLine1}</p>
+                                    {selectedOrder.customer.address.addressLine2 && (
+                                        <p>{selectedOrder.customer.address.addressLine2}</p>
+                                    )}
+                                    <p>
+                                        {selectedOrder.customer.address.city}, {selectedOrder.customer.address.state} {selectedOrder.customer.address.zipCode}
+                                    </p>
+                                    <p>{selectedOrder.customer.address.country}</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Order Items */}
+                        <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                            <CardHeader>
+                                <h3 className="font-semibold">Order Items ({selectedOrder.items.length})</h3>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                {selectedOrder.items.map((item, index) => (
+                                    <div key={index} className="space-y-3">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="font-medium">{item.name}</h4>
+                                                    <Badge variant={item.type === 'custom' ? 'default' : 'secondary'}>
+                                                        {item.type}
+                                                    </Badge>
+                                                </div>
+                                                <p className="text-sm text-muted-foreground mt-1">
+                                                    Quantity: {item.cartQuantity} × ₹{item.thaliPrice}
+                                                </p>
+                                                {item.includedItems && item.includedItems.length > 0 && (
+                                                    <div className="mt-2">
+                                                        <p className="text-sm font-medium">Includes:</p>
+                                                        <div className="grid grid-cols-2 gap-1 mt-1">
+                                                            {item.includedItems.map((includedItem, idx) => (
+                                                                <p key={idx} className="text-sm text-muted-foreground">
+                                                                    • {includedItem}
+                                                                </p>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="font-semibold">₹{item.thaliPrice * item.cartQuantity}</span>
+                                        </div>
+                                        {index < selectedOrder.items.length - 1 && <Separator />}
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        {/* Order Summary */}
+                        <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                            <CardHeader>
+                                <h3 className="font-semibold">Payment Summary</h3>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between text-sm">
+                                        <span>Subtotal</span>
+                                        <span>₹{selectedOrder.subtotal}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span>Delivery Fee</span>
+                                        <span>{selectedOrder.deliveryFee > 0 ? `₹${selectedOrder.deliveryFee}` : 'FREE'}</span>
+                                    </div>
+                                </div>
+                                <Separator />
+                                <div className="flex justify-between font-semibold text-lg">
+                                    <span>Total Amount</span>
+                                    <span>₹{selectedOrder.total}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <Button variant="outline" className="w-full bg-white/80 backdrop-blur-sm border-white/50" onClick={handleBackToList}>
+                                Back to Orders
+                            </Button>
+                            <Link href="/" className="flex-1">
+                                <Button className="w-full bg-black text-white hover:bg-gray-800">
+                                    Continue Shopping
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // List view for all orders
     return (
-        <div className="min-h-screen bg-[#FFF5F5] text-black px-4 py-20 md:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-                <Link href="/user/address">
-                    <Button variant="default" className="bg-black hover:text-black mb-6 md:mb-8">
-                        <ChevronLeft className="mr-2 h-4 w-4" /> Back to Address
-                    </Button>
-                </Link>
+        <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-red-50">
+            <div className="container mx-auto p-4 max-w-3xl mt-[70px] pb-[40%] sm:pb-[30%] lg:pb-[20px]">
+                {/* Header */}
+                <div className="fixed top-[70px] left-0 right-0 flex items-center justify-between p-4 mb-6 bg-white border-b z-30">
+                    <div className="flex items-center gap-4">
+                        <Link href="/user/orderSummary">
+                            <Button variant="ghost" size="icon" style={{ color: 'black' }}>
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                        </Link>
+                        <h1 className="text-xl md:text-2xl font-semibold text-[black]">My Orders</h1>
+                    </div>
+                </div>
 
-                <h1 className="font-poorStory font-semibold text-2xl md:text-3xl text-center mb-8">
-                    Select Payment Method
-                </h1>
-
-                <div className="bg-white rounded-lg shadow-md p-6 md:p-8">
-                    <div className="space-y-6">
-                        {/* Payment options */}
-                        <div className="flex items-start space-x-3">
-                            <input
-                                type="radio"
-                                id="payOnDelivery"
-                                name="paymentMethod"
-                                checked
-                                readOnly
-                                className="mt-1 h-4 w-4 accent-black"
-                            />
-                            <div>
-                                <label htmlFor="payOnDelivery" className="font-medium text-lg block">
-                                    Pay on Delivery
-                                </label>
-                                <p className="text-gray-600 text-sm mt-1">
-                                    Pay with cash when your order is delivered
+                <div className="mt-[80px] md:mt-[100px] space-y-6">
+                    {orders.length === 0 ? (
+                        <Card className="backdrop-blur-sm bg-white/80 border border-white/50 shadow-lg">
+                            <CardContent className="flex flex-col items-center justify-center py-12">
+                                <Package className="h-16 w-16 text-gray-400 mb-4" />
+                                <h3 className="text-lg font-semibold mb-2">No Orders Yet</h3>
+                                <p className="text-muted-foreground text-center mb-4">
+                                    You haven't placed any orders yet. Start shopping to see your order history here.
                                 </p>
-                            </div>
+                                <Link href="/">
+                                    <Button className="bg-black text-white hover:bg-gray-800">
+                                        Start Shopping
+                                    </Button>
+                                </Link>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="space-y-4">
+                            {orders.map((order) => (
+                                <Card key={order.id} className="cursor-pointer hover:shadow-lg transition-all duration-300 backdrop-blur-sm bg-white/80 border border-white/50 hover:bg-white/90" onClick={() => handleOrderClick(order)}>
+                                    <CardContent className="p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${getStatusColor(order.status)}`}>
+                                                    {getStatusIcon(order.status)}
+                                                    <span className="font-medium capitalize text-sm">{order.status}</span>
+                                                </div>
+                                                <span className="text-sm text-muted-foreground">#{order.id}</span>
+                                            </div>
+                                            <Eye className="h-5 w-5 text-muted-foreground" />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Order Date</span>
+                                                <span className="text-sm">{formatDate(order.createdAt)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Items</span>
+                                                <span className="text-sm">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium">Total Amount</span>
+                                                <span className="font-semibold">₹{order.total}</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
                         </div>
+                    )}
 
-                        <div className="flex items-start space-x-3 opacity-50">
-                            <input
-                                type="radio"
-                                id="onlinePayment"
-                                name="paymentMethod"
-                                disabled
-                                className="mt-1 h-4 w-4"
-                            />
-                            <div>
-                                <label htmlFor="onlinePayment" className="font-medium text-lg block">
-                                    Online Payment (Coming Soon)
-                                </label>
-                                <p className="text-gray-600 text-sm mt-1">
-                                    Pay securely with credit/debit card or UPI
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Order summary */}
-                        <div className="mt-8 pt-6 border-t border-gray-200">
-                            <h3 className="font-semibold text-lg mb-4">Order Summary</h3>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Subtotal</span>
-                                    <span className="font-medium">{orderTotal}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Delivery Fee</span>
-                                    <span className="font-medium">₹40</span>
-                                </div>
-                                <div className="flex justify-between font-semibold text-base pt-2 border-t border-gray-100">
-                                    <span>Total</span>
-                                    <span>₹{Number(orderTotal) + 40}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Button
-                            type="button"
-                            className="w-full bg-black hover:bg-gray-800 text-white h-12 md:h-14 mt-6"
-                            onClick={() => {
-                                window.location.href = "/user/history";
-                                createOrder()
-                            }}
-                        >
-                            Place Order
-                        </Button>
-
-
-                        <p className="text-xs text-center text-gray-500 mt-4">
-                            By placing your order, you agree to our Terms of Service and Privacy Policy
-                        </p>
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Link href="/" className="flex-1">
+                            <Button className="w-full bg-black text-white hover:bg-gray-800">
+                                Continue Shopping
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
@@ -166,6 +446,4 @@ function Payment() {
     )
 }
 
-export default withAuth(Payment)
-
-
+export default withAuth(OrderSummary)
